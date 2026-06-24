@@ -1,0 +1,24 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# Next.js
+card/.next/
+card/out/
+card/build/
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Cloudflare Wrangler secrets
+card-worker/wrangler.toml
+card-worker/.dev.vars
+
+# macOS
+.DS_Store
