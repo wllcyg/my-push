@@ -4,7 +4,7 @@ compatibility_date = "2024-05-12"
 compatibility_flags = [ "nodejs_compat" ]
 
 [triggers]
-crons = ["0 0 * * *"] # 每天早上 8 点触发 (UTC 0 = UTC+8 的 8点)
+crons = ["0 23 * * *"] # 每天早上 7:00 触发 (北京时间 UTC+8), 对应 UTC 时间的前一天 23:00
 
 [vars]
 QWEN_API_KEY = "your-qwen-api-key"
