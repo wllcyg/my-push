@@ -73,11 +73,11 @@ async function getWordFromQwen(env: Env) {
   "word": "单词",
   "phonetic": "音标",
   "meaning": "简短精准的中文释义（包含词性）",
-  "example": "包含该单词的纯英文经典例句或电影名言",
-  "exampleTranslation": "这句例句的精准优美中文翻译",
+  "example": "包含该单词的纯英文经典例句，要求句子极具文学性、富有诗意、优雅且深刻，仿佛出自经典名著",
+  "exampleTranslation": "这句例句的精准优美的中文翻译，必须信达雅",
   "root": "词根词缀拆解（如 seren(平静)+dipity）",
   "emoji": "一个最符合该单词意境的Emoji（如 🍀）",
-  "quoteSource": "例句的出处（如 — The Great Gatsby）",
+  "quoteSource": "例句的出处（如 — The Great Gatsby，如果是原创请写 — Everyday Context）",
   "streak": "填入 1 即可"
 }`;
 
@@ -88,7 +88,7 @@ async function getWordFromQwen(env: Env) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'qwen-turbo',
+      model: 'qwen3.7-plus',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' }
     })
