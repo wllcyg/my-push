@@ -2,11 +2,11 @@ export interface Env {
   QWEN_API_KEY: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
-  VERCEL_CARD_URL: string;
   WECHAT_APP_ID: string;
   WECHAT_APP_SECRET: string;
   WECHAT_OPENID: string;
   WECHAT_TEMPLATE_ID: string;
+  FRONTEND_URL: string;
 }
 
 export default {
@@ -41,7 +41,7 @@ async function runWorkflow(env: Env) {
 
   // 3. 推送到微信测试号 (跳转到前端网页)
   console.log("Pushing to WeChat Test Account...");
-  const pageUrl = `http://localhost:3000?t=${new Date().getTime()}`;
+  const pageUrl = `${env.FRONTEND_URL}?t=${new Date().getTime()}`;
   const pushResult = await pushToWeChatTestAccount(env, wordData, pageUrl);
 
   return {
