@@ -7,6 +7,7 @@ export interface Env {
   WECHAT_OPENID: string;
   WECHAT_TEMPLATE_ID: string;
   FRONTEND_URL: string;
+  WORD_HISTORY: KVNamespace;
 }
 
 export default {
@@ -52,8 +53,8 @@ async function runWorkflow(env: Env) {
 }
 
 async function getWordFromQwen(env: Env) {
-  if (env.QWEN_API_KEY === 'your-qwen-api-key') {
-    // 模拟数据用于本地测试，如果你还没配 Key
+  if (!env.QWEN_API_KEY || env.QWEN_API_KEY === 'your-qwen-api-key') {
+    // 模拟数据用于本地测试
     return {
       word: "Resilience",
       phonetic: "/rəˈzilyəns/",
@@ -63,11 +64,24 @@ async function getWordFromQwen(env: Env) {
       root: "re (回) + salire (跳跃)",
       emoji: "🌱",
       quoteSource: "— Everyday Context",
-      streak: "1"
+      streak: 1
     };
   }
 
+  // 1. 获取历史单词列表
+  let historyList: string[] = [];
+  try {
+    const historyStr = await env.WORD_HISTORY.get('history');
+    if (historyStr) {
+      historyList = JSON.parse(historyStr);
+    }
+  } catch (e) {
+    console.error("Failed to read WORD_HISTORY:", e);
+  }
+  const historyText = historyList.length > 0 ? `绝对不要使用以下曾经生成过的单词：[${historyList.join(', ')}]` : '';
+
   const prompt = `请你作为一个资深英语老师，随机挑选一个具有美感、有深度或高级的英语单词。
+${historyText}
 请以 JSON 格式返回以下字段，不要输出任何多余的解释：
 {
   "word": "单词",
@@ -97,7 +111,24 @@ async function getWordFromQwen(env: Env) {
   const data: any = await response.json();
   if (!response.ok) throw new Error(`Qwen API Error: ${data.message || JSON.stringify(data)}`);
   
-  return JSON.parse(data.choices[0].message.content);
+  const responseText = data.choices[0].message.content;
+
+  // 获取生成的单词并写入历史记录
+  try {
+    const wordResult = JSON.parse(responseText);
+    const newWord = wordResult.word;
+    if (newWord) {
+      historyList.push(newWord.toLowerCase());
+      // 限制历史记录最多保存 1000 个单词，防止 KV 过大
+      if (historyList.length > 1000) historyList.shift();
+      await env.WORD_HISTORY.put('history', JSON.stringify(historyList));
+      console.log(`Saved new word "${newWord}" to history. History size: ${historyList.length}`);
+    }
+  } catch (e) {
+    console.error("Failed to parse response or save history:", e);
+  }
+
+  return JSON.parse(responseText);
 }
 
 

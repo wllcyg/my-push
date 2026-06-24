@@ -15,3 +15,7 @@ WECHAT_APP_ID = "your-wechat-app-id"
 WECHAT_APP_SECRET = "your-wechat-app-secret"
 WECHAT_OPENID = "your-wechat-openid1,your-wechat-openid2"
 WECHAT_TEMPLATE_ID = "your-wechat-template-id"
+
+[[kv_namespaces]]
+binding = "WORD_HISTORY"
+id = "your-kv-namespace-id"
