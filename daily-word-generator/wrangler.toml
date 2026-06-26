@@ -1,0 +1,22 @@
+name = "daily-word-generator"
+main = "src/index.ts"
+compatibility_date = "2024-06-26"
+
+# Run at 00:01 (Generate) and 07:00 (Push) every day (Beijing Time)
+[triggers]
+crons = ["1 16 * * *", "0 23 * * *"]
+
+[ai]
+binding = "AI"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "my-blog-db"
+database_id = "4d5c79ea-3e5b-453f-907a-89b3eb7d3b06"
+
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "word-embeddings"
+
+[vars]
+VAPID_PRIVATE_KEY = '{"key_ops":["sign"],"ext":true,"kty":"EC","x":"E6Gvu-VrCxgQUiIsI8QMpUbJDN7pR86QNoY_AH9M7oI","y":"cws6PV0chzAQsIooCJqNlJxu7zGfOxIAbXlTSh_tXT8","crv":"P-256","d":"Z7mLiShkdtlGDF6YcyTh0e_TZhwdXzjLEUDtGLsj-ic"}'
