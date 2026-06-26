@@ -152,7 +152,7 @@ export default {
               subscription: subscriptionObj,
               message: {
                 payload: {
-                  title: `早安！今日新词已备好`,
+                  title: `消息通知`,
                   body: "每天进步一点点，点击查看今日的精美短文与单词解析。",
                   url: "/"
                 },
