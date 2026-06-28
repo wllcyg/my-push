@@ -101,4 +101,7 @@ async function runTool() {
     console.log(response.content);
 }
 
-runTool().catch(console.error);
+// 只有当直接运行本文件时才执行测试（防止被其他文件 import 时也跑一遍测试）
+if (import.meta.url === `file://${process.argv[1]}`) {
+    runTool().catch(console.error);
+}
