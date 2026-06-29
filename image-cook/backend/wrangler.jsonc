@@ -1,0 +1,25 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "backend",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-06-29",
+	"routes": [
+		{
+			"pattern": "api.cheatppf.xyz",
+			"custom_domain": true
+		}
+	],
+	"vars": {
+		"ADMIN_TOKEN": "CookBase_Xy7$p2L!m9Q"
+	},
+	"r2_buckets": [
+		{
+			"binding": "IMAGE_BUCKET",
+			"bucket_name": "image-cook-bucket"
+		},
+		{
+			"bucket_name": "image-cook-bucket",
+			"binding": "image_cook_bucket"
+		}
+	]
+}

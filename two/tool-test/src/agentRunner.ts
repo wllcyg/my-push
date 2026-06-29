@@ -13,13 +13,20 @@ import chalk from "chalk";
 export async function runAgentLoop(
     modelWithTools: Runnable<any, any>,
     tools: StructuredTool[],
-    messages: BaseMessage[]
+    messages: BaseMessage[],
+    maxIterations: number = 30
 ) {
     console.log(chalk.cyan("🤖 [Agent] 思考中..."));
     let response = await modelWithTools.invoke(messages);
     messages.push(response);
 
+    let iteration = 0;
     while (response.tool_calls && response.tool_calls.length > 0) {
+        if (iteration >= maxIterations) {
+            console.log(chalk.red(`\n❌ [Agent] 达到最大循环次数 (${maxIterations})，强制退出以防死循环！`));
+            break;
+        }
+        iteration++;
         console.log(chalk.yellow(`\n🔧 [Agent] 决定调用 ${response.tool_calls.length} 个工具: `) + chalk.magenta(response.tool_calls.map((t: any) => t.name).join(', ')));
 
         const toolMessages = await Promise.all(

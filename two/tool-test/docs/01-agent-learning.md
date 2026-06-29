@@ -1,5 +1,6 @@
 # LangChain Agent 开发最佳实践与技术总结
 
+![首图](https://api.cheatppf.xyz/i/mqz8ql1j-fbqicj.png)
 本文档总结了基于 LangChain JS/TS 构建具备“工具调用（Tool Calling）”能力的高级 Agent 的核心技术点、采坑经验和架构最佳实践。
 
 ---
