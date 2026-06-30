@@ -21,5 +21,8 @@
 			"bucket_name": "image-cook-bucket",
 			"binding": "image_cook_bucket"
 		}
-	]
+	],
+	"ai": {
+		"binding": "AI"
+	}
 }

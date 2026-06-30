@@ -6,7 +6,22 @@ import './index.css';
 const API_BASE = import.meta.env.DEV ? 'http://127.0.0.1:8787' : 'https://api.cheatppf.xyz';
 
 type Toast = { msg: string; type: string };
-type ImageItem = { key: string; url: string; size: number; uploaded: string };
+type ImageItem = { key: string; url: string; size: number; uploaded: string; tags?: string };
+
+const TAG_MAP: Record<string, string> = {
+  'All': '全部',
+  'screenshot': '截图',
+  'photo': '照片',
+  'meme': '表情包',
+  'document': '文档',
+  'scenery': '风景',
+  'code': '代码',
+  'portrait': '人像',
+  'UI': '界面',
+  'None': '无标签'
+};
+
+const t = (tag: string) => TAG_MAP[tag] || tag;
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
@@ -16,6 +31,7 @@ function App() {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [activeTag, setActiveTag] = useState<string>('All');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -64,6 +80,23 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLogged]);
 
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (!isLogged) return;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) handleUpload(file);
+          break; // 只处理第一张图
+        }
+      }
+    };
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [isLogged, token]); // 依赖 token 保证 handleUpload 闭包有效
+
   const handleUpload = async (file: File) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -74,17 +107,18 @@ function App() {
     setUploading(true);
     
     let fileToUpload = file;
-    // 自动压缩大于 500KB 的图片 (非 GIF)
-    if (file.size > 500 * 1024 && !file.type.includes('gif')) {
-      showToast('正在压缩图片...', 'info');
+    // 自动压缩并转换为 WebP (非 GIF)
+    if (!file.type.includes('gif')) {
+      showToast('正在压缩并转换为 WebP...', 'info');
       try {
         const options = {
           maxSizeMB: 1, // 压缩到最大 1MB
           maxWidthOrHeight: 1920, // 限制最大宽度/高度
           useWebWorker: true,
-          fileType: file.type // 保持原有格式
+          fileType: 'image/webp'
         };
-        fileToUpload = await imageCompression(file, options);
+        const compressedBlob = await imageCompression(file, options);
+        fileToUpload = new File([compressedBlob], file.name.replace(/\.[^/.]+$/, "") + ".webp", { type: 'image/webp' });
       } catch (error) {
         console.error('图片压缩失败:', error);
       }
@@ -249,12 +283,25 @@ function App() {
             No images found in your bucket.
           </div>
         ) : (
-          <div className="gallery-grid">
-            {images.map((img) => (
-              <div key={img.key} className="image-card">
-                <img src={img.url} alt={img.key} loading="lazy" />
-                <div className="image-overlay">
-                  <div className="image-actions">
+          <>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+              {['All', ...Array.from(new Set(images.flatMap(img => (img.tags && img.tags !== 'None') ? img.tags.split(',').map(tag=>tag.trim()) : [])))].filter(Boolean).map(tag => (
+                <button 
+                  key={tag} 
+                  className={`btn ${activeTag === tag ? 'btn-primary' : ''}`}
+                  onClick={() => setActiveTag(tag)}
+                  style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem', background: activeTag === tag ? '' : 'rgba(255,255,255,0.1)' }}
+                >
+                  {t(tag)}
+                </button>
+              ))}
+            </div>
+            <div className="gallery-grid">
+              {images.filter(img => activeTag === 'All' || (img.tags && img.tags.includes(activeTag))).map((img) => (
+                <div key={img.key} className="image-card">
+                  <img src={img.url} alt={img.key} loading="lazy" />
+                  <div className="image-overlay">
+                    <div className="image-actions">
                     <button className="action-btn" onClick={(e) => { e.stopPropagation(); copyToClipboard(img.url); }} title="Copy URL">
                       <Copy size={16} /> URL
                     </button>
@@ -266,11 +313,15 @@ function App() {
                     </button>
                   </div>
                   <div className="image-info">{img.key}</div>
-                  <div className="image-info">{(img.size / 1024).toFixed(1)} KB</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                    <span>{(img.size / 1024).toFixed(1)} KB</span>
+                    <span>{(img.tags || 'None').split(',').map(tag => t(tag.trim())).join(', ')}</span>
+                  </div>
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          </>
         )}
       </div>
 
