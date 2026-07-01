@@ -1,5 +1,7 @@
 import { Document } from "@langchain/core/documents";
 
+import { createEmbeddingModel } from '@/model.js'
+import { VECTOR_DIM } from '@/config.js'
 /**
  * 将检索到的多个文档片段组装成带有标记的纯文本 Context
  * @param documents 检索出来的文档数组
@@ -9,4 +11,14 @@ export function formatDocumentsAsString(documents: Document[]): string {
     return documents
         .map((doc, i) => `[片段${i + 1}]\n${doc.pageContent}`)
         .join("\n\n——\n\n");
+}
+
+
+const embeddingModel = createEmbeddingModel({
+    dimensions: VECTOR_DIM,
+})
+
+export async function getVector(text: string) {
+    const vector = await embeddingModel.embedQuery(text)
+    return vector
 }
