@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { UploadCloud, Copy, Image as ImageIcon, Trash2, LogIn, Loader2, Check, RefreshCw } from 'lucide-react';
-import imageCompression from 'browser-image-compression';
 import './index.css';
 
 const API_BASE = import.meta.env.DEV ? 'http://127.0.0.1:8787' : 'https://api.cheatppf.xyz';
@@ -107,22 +106,6 @@ function App() {
     setUploading(true);
     
     let fileToUpload = file;
-    // 自动压缩并转换为 WebP (非 GIF)
-    if (!file.type.includes('gif')) {
-      showToast('正在压缩并转换为 WebP...', 'info');
-      try {
-        const options = {
-          maxSizeMB: 1, // 压缩到最大 1MB
-          maxWidthOrHeight: 1920, // 限制最大宽度/高度
-          useWebWorker: true,
-          fileType: 'image/webp'
-        };
-        const compressedBlob = await imageCompression(file, options);
-        fileToUpload = new File([compressedBlob], file.name.replace(/\.[^/.]+$/, "") + ".webp", { type: 'image/webp' });
-      } catch (error) {
-        console.error('图片压缩失败:', error);
-      }
-    }
 
     const formData = new FormData();
     formData.append('file', fileToUpload, file.name);
