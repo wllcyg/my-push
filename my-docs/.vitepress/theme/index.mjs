@@ -10,6 +10,7 @@ export default {
         import('oh-my-live2d').then((module) => {
           const { loadOml2d } = module;
           loadOml2d({
+            mobileDisplay: false,
             models: [
               {
                 path: 'https://assets.cheatppf.xyz/live2d/cat-black/model.json',

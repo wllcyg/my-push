@@ -391,7 +391,77 @@ footer {
   stroke: currentColor;
   fill: none;
   stroke-width: 1.5;
-  stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* 移动端兼容 (Mobile Responsive) */
+@media screen and (max-width: 768px) {
+  .container {
+    padding: 0 24px;
+  }
+
+  header {
+    flex-direction: column;
+    gap: 20px;
+    padding: 30px 0;
+  }
+
+  nav {
+    gap: 24px;
+  }
+
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    margin-top: 30px;
+    margin-bottom: 50px;
+    gap: 40px;
+  }
+
+  .hero-content h1 {
+    font-size: 40px;
+  }
+
+  .hero-content p {
+    font-size: 16px;
+    margin-bottom: 30px;
+  }
+
+  .hero-graphics {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    aspect-ratio: 4/3;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 60px;
+  }
+
+  .card {
+    padding: 24px 20px;
+    gap: 16px;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .card-arrow {
+    margin-left: 0;
+    margin-top: 8px;
+    transform: rotate(90deg);
+  }
+
+  .card:hover .card-arrow {
+    transform: rotate(90deg) translateX(4px);
+  }
+
+  footer {
+    flex-direction: column;
+    gap: 16px;
+    padding: 30px 0;
+    text-align: center;
+  }
 }
 </style>
