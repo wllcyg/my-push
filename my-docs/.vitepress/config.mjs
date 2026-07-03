@@ -12,7 +12,8 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Flutter', link: '/docs/flutter/learning-guide' },
-      { text: 'AI & Agent', link: '/docs/ai/01-agent-learning' }
+      { text: 'AI & Agent', link: '/docs/ai/01-agent-learning' },
+      { text: 'Tiptap Editor 在线体验', link: 'https://editor.cheatppf.xyz/' }
     ],
     socialLinks: [
       { icon: 'github', link: 'https://github.com/wllcyg' }
@@ -37,6 +38,10 @@ export default defineConfig({
           {
             "text": "Agent 记忆管理与多轮对话实战总结",
             "link": "/docs/ai/04-memory-management"
+          },
+          {
+            "text": "Agent 结构化输出与流式解析实战总结",
+            "link": "/docs/ai/05-output-parsers"
           }
         ]
       }],

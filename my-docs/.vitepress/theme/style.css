@@ -1,0 +1,5 @@
+/* 修复深色模式下 Logo 四周的白色底边角问题 */
+.VPNavBarTitle .logo {
+  border-radius: 8px; /* 通过切圆角把白边裁掉，可根据实际效果微调 6px - 10px */
+  overflow: hidden;
+}

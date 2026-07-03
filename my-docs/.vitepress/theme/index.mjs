@@ -1,6 +1,8 @@
 import DefaultTheme from 'vitepress/theme'
 import { inBrowser } from 'vitepress'
 import { nextTick, onMounted } from 'vue'
+import './style.css'
+
 
 // 单例标记，防止路由切换时重复初始化
 let live2dLoaded = false
