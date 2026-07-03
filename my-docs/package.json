@@ -6,7 +6,8 @@
   "scripts": {
     "docs:dev": "vitepress dev --port 8080",
     "docs:build": "vitepress build",
-    "docs:preview": "vitepress preview"
+    "docs:preview": "vitepress preview",
+    "deploy": "pnpm run docs:build && npx wrangler pages deploy .vitepress/dist"
   },
   "keywords": [],
   "author": "",
