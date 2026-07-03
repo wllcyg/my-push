@@ -1,6 +1,6 @@
 import DefaultTheme from 'vitepress/theme'
-import { inBrowser } from 'vitepress'
-import { nextTick, onMounted } from 'vue'
+import { inBrowser, useRoute } from 'vitepress'
+import { nextTick, onMounted, watch } from 'vue'
 import './style.css'
 
 
@@ -56,13 +56,28 @@ function initLive2d() {
 export default {
   extends: DefaultTheme,
   setup() {
+    const route = useRoute()
     if (!inBrowser) return
 
+    // 初始化图片放大插件
+    const initZoom = () => {
+      import('medium-zoom').then((m) => {
+        m.default('.vp-doc img', { background: 'var(--vp-c-bg)' })
+      })
+    }
+
     onMounted(() => {
-      // nextTick 确保 DOM 完全稳定后再挂载 Live2D
+      // nextTick 确保 DOM 完全稳定后再挂载
       nextTick(() => {
         initLive2d()
+        initZoom()
       })
     })
+
+    // 监听路由变化，每次切换页面后重新为新页面的图片绑定放大效果
+    watch(
+      () => route.path,
+      () => nextTick(() => initZoom())
+    )
   }
 }
