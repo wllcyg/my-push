@@ -9,7 +9,16 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>()
 
-app.use('*', cors())
+app.use('*', cors({
+  origin: [
+    'https://image.cheatppf.xyz',
+    'http://localhost:3000',
+    'http://localhost:5173'
+  ],
+  allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  allowMethods: ['POST', 'GET', 'OPTIONS', 'DELETE', 'PUT'],
+  maxAge: 86400,
+}))
 
 app.use('/api/*', async (c, next) => {
   if (c.req.method === 'OPTIONS') {

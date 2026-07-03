@@ -16,7 +16,6 @@ async function runMain() {
                 fullContent += chunk.content
                 chunkCount++;
                 process.stdout.write(chunk.content as string || "")
-
             }
         }
         console.log(`完整的数据块${chunkCount}个`);
