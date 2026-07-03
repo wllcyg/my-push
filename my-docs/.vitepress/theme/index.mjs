@@ -1,6 +1,7 @@
 import DefaultTheme from 'vitepress/theme'
 import { inBrowser, useRoute } from 'vitepress'
-import { nextTick, onMounted, watch } from 'vue'
+import { nextTick, onMounted, watch, h } from 'vue'
+import ReadingProgress from './components/ReadingProgress.vue'
 import './style.css'
 
 
@@ -55,6 +56,11 @@ function initLive2d() {
 
 export default {
   extends: DefaultTheme,
+  Layout() {
+    return h(DefaultTheme.Layout, null, {
+      'layout-top': () => h(ReadingProgress)
+    })
+  },
   setup() {
     const route = useRoute()
     if (!inBrowser) return
