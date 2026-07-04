@@ -42,6 +42,10 @@ export default defineConfig({
           {
             "text": "Agent 结构化输出与流式解析实战总结",
             "link": "/docs/ai/05-output-parsers"
+          },
+          {
+            "text": "迷你 AI 编程助手与 Tool Calling 实战",
+            "link": "/docs/ai/06-mini-cursor-agent"
           }
         ]
       }],
