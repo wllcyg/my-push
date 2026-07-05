@@ -46,6 +46,10 @@ export default defineConfig({
           {
             "text": "迷你 AI 编程助手与 Tool Calling 实战",
             "link": "/docs/ai/06-mini-cursor-agent"
+          },
+          {
+            "text": "LangChain 提示词工程深度实践",
+            "link": "/docs/ai/07-prompt-engineering"
           }
         ]
       }],

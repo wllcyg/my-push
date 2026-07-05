@@ -22,3 +22,16 @@ export async function getVector(text: string) {
     const vector = await embeddingModel.embedQuery(text)
     return vector
 }
+
+/**
+ * 实时在控制台打印大模型的流式输出内容
+ * @param stream LangChain 模型的流式响应对象
+ */
+export async function printStream(stream: AsyncIterable<any>) {
+    for await (const chunk of stream) {
+        if (chunk.content) {
+            process.stdout.write(chunk.content as string);
+        }
+    }
+    console.log("\n");
+}
