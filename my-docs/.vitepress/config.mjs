@@ -50,6 +50,10 @@ export default defineConfig({
           {
             "text": "LangChain 提示词工程深度实践",
             "link": "/docs/ai/07-prompt-engineering"
+          },
+          {
+            "text": "LCEL 核心组件与数据流转实战",
+            "link": "/docs/ai/08-lcel-chains"
           }
         ]
       }],
