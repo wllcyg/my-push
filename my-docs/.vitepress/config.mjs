@@ -54,6 +54,10 @@ export default defineConfig({
           {
             "text": "LCEL 核心组件与数据流转实战",
             "link": "/docs/ai/08-lcel-chains"
+          },
+          {
+            "text": "Agent 工具调用与 MCP 接入实战总结",
+            "link": "/docs/ai/09-agent-mcp-learning"
           }
         ]
       }],
