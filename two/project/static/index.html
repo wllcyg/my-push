@@ -19,12 +19,12 @@
 </head>
 <body>
 
-    <h2>🤖 AI 打字机测试 (SSE)</h2>
+    <h2>🤖 Agent 工具调用流式测试 (SSE)</h2>
     
     <div class="chat-container">
         <div class="input-group">
-            <input type="text" id="prompt" value="写一首赞美春天的七言绝句" placeholder="输入你想问的问题..." onkeypress="handleEnter(event)">
-            <button id="sendBtn" onclick="sendMessage()">发送</button>
+            <input type="text" id="prompt" value="001" placeholder="输入你想查询的用户 ID (如: 001)..." onkeypress="handleEnter(event)">
+            <button id="sendBtn" onclick="sendMessage()">查询并发送</button>
         </div>
         
         <div id="output">等待提问...</div>
@@ -43,7 +43,7 @@
             // 初始化界面
             outputBox.innerHTML = '<span class="typing"></span>';
             btn.disabled = true;
-            btn.innerText = "生成中...";
+            btn.innerText = "思考中...";
 
             // 之前如果有可能没关掉的连接，先关掉
             if (eventSource) {
@@ -51,8 +51,8 @@
             }
 
             // 发起 SSE 请求 (自动处理请求和数据流)
-            // 注意这里的路径：由于我们挂载在 /static 下，相对根目录的接口就是 /ai/chat/stream
-            eventSource = new EventSource(`/ai/chat/stream?prompt=${encodeURIComponent(prompt)}`);
+            // 调用我们刚才写的带有工具执行能力的流式接口
+            eventSource = new EventSource(`/ai/get_user_stream?user_id=${encodeURIComponent(prompt)}`);
 
             let fullText = "";
 

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sse_starlette.sse import EventSourceResponse
 from .ai_service import AiService
 from modules.config.settings import Settings, get_settings
+import json
 
 # 创建该模块的路由实例（相当于 NestJS 的 @Controller('ai')）
 router = APIRouter(prefix="/ai", tags=["AI 对话模块"])
@@ -47,3 +48,31 @@ def chat(prompt: str, ai_service: AiService = Depends(get_ai_service)):
     # 直接调用注入进来的 service 提供的方法
     return ai_service.generate_reply(prompt)
 
+@router.get('/get_user')
+def get_user(user_id: str, ai_service: AiService = Depends(get_ai_service)):
+    """
+    Controller 层：负责接收 HTTP 请求、参数获取，然后委托给 Service 处理。
+    """
+    # 直接调用注入进来的 service 提供的方法
+    return ai_service.get_user(user_id)
+
+@router.get('/get_user_stream')
+def get_user_stream(user_id: str, ai_service: AiService = Depends(get_ai_service)):
+    """
+    Controller 层：负责接收 HTTP 请求并返回 SSE 流，展示 Agent 调用工具期间思考、调用完后输出的结果。
+    """
+    async def event_generator():
+        # Service 层现在是一个 coroutine，返回一个 AsyncGenerator
+        stream_gen = await ai_service.get_user_stream(user_id)
+        async for chunk in stream_gen:
+            if not chunk:
+                continue
+            
+            # 使用 JSON 序列化保证前端能安全解析
+            safe_data = json.dumps({"text": chunk}, ensure_ascii=False)
+            yield {"data": safe_data}
+            
+        # 推送结束标志
+        yield {"data": "[DONE]"}
+
+    return EventSourceResponse(event_generator())
