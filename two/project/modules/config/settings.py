@@ -30,8 +30,10 @@ class Settings(BaseSettings):
     # --- 地图/第三方 Key ---
     gaode_mcp_key: str | None = None
 
-    # 指定读取 .env 文件
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    web_search_key: str | None = None
+
+    # 指定读取 .env 文件并忽略多余的环境变量
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 # 使用 lru_cache 装饰器，确保在整个应用生命周期中，配置类只被实例化一次（单例模式）
 @lru_cache()

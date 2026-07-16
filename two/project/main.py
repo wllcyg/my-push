@@ -1,6 +1,17 @@
+import sys
+import asyncio
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import uvicorn
+
+# 确保在 Windows 控制台输出 UTF-8，防止 GBK 编码报错
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+# ✅ Windows 上 ProactorEventLoop 与异步 SSL 有兼容性问题，切换为 SelectorEventLoop
+# 这对 uvicorn 使用 asyncmy 连接 TiDB Cloud（需要 SSL）是必须的
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 # 引入我们刚写好的 ai_controller 路由
 from modules.ai.ai_controller import router as ai_router

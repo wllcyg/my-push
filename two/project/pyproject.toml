@@ -5,5 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "aiomysql>=0.3.2",
+    "asyncmy>=0.2.11",
+    "sqlalchemy>=2.0.51",
     "sse-starlette>=3.4.5",
 ]
