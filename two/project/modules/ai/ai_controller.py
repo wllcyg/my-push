@@ -17,12 +17,12 @@ def chat_stream(prompt: str, ai_service: AiService = Depends(get_ai_service)):
     """
     流式对话接口：使用 Server-Sent Events (SSE) 实时推送大模型的内容
     """
-    def event_generator():
+    async def event_generator():
         # 调用 service 里的流式方法，获取生成器
-        stream_chunks = ai_service.generate_reply_stream(prompt)
+        stream_chunks = await ai_service.generate_reply_stream(prompt)
         
         import json
-        for chunk in stream_chunks:
+        async for chunk in stream_chunks:
             # 过滤掉空字符串
             if not chunk:
                 continue

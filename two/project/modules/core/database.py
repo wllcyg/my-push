@@ -4,6 +4,7 @@ from modules.config.settings import get_settings
 
 _settings = get_settings()
 
+# 导出给 alembic/env.py 使用
 _db_url = (
     f"mysql+asyncmy://{_settings.db_username}:{_settings.db_password}"
     f"@{_settings.db_host}:{_settings.db_port}/{_settings.db_database}"

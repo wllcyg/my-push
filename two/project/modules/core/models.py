@@ -1,12 +1,2 @@
-from datetime import datetime
-from sqlalchemy import Integer, String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
-from modules.core.database import Base
-
-class User(Base):
-    __tablename__ = "users"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, comment="用户ID")
-    name: Mapped[str] = mapped_column(String(50), nullable=False, comment="用户姓名")
-    email: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, comment="用户邮箱")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, comment="创建时间")
+# 此文件已废弃，所有 Entity 已迁移到各自的模块目录下
+# User Entity 现在在 modules/user/user_entity.py

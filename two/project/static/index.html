@@ -23,8 +23,8 @@
     
     <div class="chat-container">
         <div class="input-group">
-            <input type="text" id="prompt" value="001" placeholder="输入你想查询的用户 ID (如: 001)..." onkeypress="handleEnter(event)">
-            <button id="sendBtn" onclick="sendMessage()">查询并发送</button>
+            <input type="text" id="prompt" value="现在的北京时间是多少" placeholder="输入你想提问的内容或指定工具操作..." onkeypress="handleEnter(event)">
+            <button id="sendBtn" onclick="sendMessage()">发送</button>
         </div>
         
         <div id="output">等待提问...</div>
@@ -51,8 +51,8 @@
             }
 
             // 发起 SSE 请求 (自动处理请求和数据流)
-            // 调用我们刚才写的带有工具执行能力的流式接口
-            eventSource = new EventSource(`/ai/get_user_stream?user_id=${encodeURIComponent(prompt)}`);
+            // 调用全局支持 Tool 的 chat_stream 接口
+            eventSource = new EventSource(`/ai/chat/stream?prompt=${encodeURIComponent(prompt)}`);
 
             let fullText = "";
 

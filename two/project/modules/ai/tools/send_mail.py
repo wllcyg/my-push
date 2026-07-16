@@ -1,5 +1,6 @@
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
+from modules.config.settings import get_settings
 
 # 内置库，无需 pip install 任何额外包！
 import smtplib
@@ -17,13 +18,13 @@ def send_mail(to: str, subject: str, text: str = "", html: str = "") -> str:
     """
     发送电子邮件。需要提供收件人邮箱、主题，可选文本内容和 HTML 内容。
     """
-    import os
+    settings = get_settings()
     
     # ⚠️ 强烈建议将这些放到环境变量或配置管理中，绝对不能提交到代码仓库！
-    SMTP_SERVER = "smtp.gmail.com"    # 谷歌邮箱 SMTP 服务器
-    SMTP_PORT = 465                   # SSL 端口
-    SENDER_EMAIL = os.getenv("SENDER_EMAIL") # 可提取到 .env
-    SENDER_PASSWORD = os.getenv("SENDER_PASSWORD") # 切勿将此真实密码提交至 Github 等公开仓库！
+    SMTP_SERVER = settings.smtp_server
+    SMTP_PORT = settings.smtp_port
+    SENDER_EMAIL = settings.sender_email
+    SENDER_PASSWORD = settings.sender_password
     
     # 1. 组装邮件对象
     msg = MIMEMultipart("alternative")
@@ -44,6 +45,7 @@ def send_mail(to: str, subject: str, text: str = "", html: str = "") -> str:
     # 3. 连接服务器并发送
     try:
         print(f"----> [发送邮件] 给 {to} 发送主题: {subject}")
+        print(f"----> SMTP: {SMTP_SERVER}:{SMTP_PORT}, 发件人: {SENDER_EMAIL}")
         with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
             server.login(SENDER_EMAIL, SENDER_PASSWORD)
             server.send_message(msg)

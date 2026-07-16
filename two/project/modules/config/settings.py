@@ -32,6 +32,13 @@ class Settings(BaseSettings):
 
     web_search_key: str | None = None
 
+    # --- 邮件配置 ---
+    smtp_server: str = "smtp.qq.com"
+    smtp_port: int = 465
+    sender_email: str | None = None
+    sender_password: str | None = None
+
+
     # 指定读取 .env 文件并忽略多余的环境变量
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

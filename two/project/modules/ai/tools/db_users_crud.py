@@ -4,7 +4,7 @@ from langchain_core.tools import tool
 from sqlalchemy import select
 
 from modules.core.database import AsyncSessionFactory
-from modules.core.models import User
+from modules.user.user_entity import User
 
 # 🚀 最佳实践: 定义严格的参数 Schema 并给大模型写清楚字段说明
 class DbUsersCrudInput(BaseModel):
