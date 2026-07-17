@@ -1,5 +1,9 @@
+import sys
 import asyncio
 from logging.config import fileConfig
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -17,6 +21,7 @@ if config.config_file_name is not None:
 # 每新增一个 Entity，在这里 import 一次，autogenerate 才能检测到变化
 from modules.core.database import Base
 from modules.user.user_entity import User  # noqa: F401
+from modules.job.job_entity import Job  # noqa: F401
 
 target_metadata = Base.metadata
 

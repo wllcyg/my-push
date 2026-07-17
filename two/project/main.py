@@ -4,8 +4,10 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 import uvicorn
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from modules.core.response import APIException
+from modules.job.job_service import global_scheduler, job_service_instance
 
 # 确保在 Windows 控制台输出 UTF-8，防止 GBK 编码报错
 if hasattr(sys.stdout, "reconfigure"):
@@ -63,15 +65,20 @@ def print_routes(routes):
             print_routes(route.routes)
 
 @app.on_event("startup")
-def startup_event():
+async def startup_event():
     print("\n====== 🚀 已注册的路由列表 ======")
     print_routes(app.routes)
     print("================================\n")
+    
+    # 启动定时任务调度器
+    global_scheduler.start()
+    await job_service_instance.init_jobs()
+    print("====== ⏰ 定时任务调度器已启动 ======\n")
 
 def main():
     # 使用 uvicorn 启动服务，支持热更新
     print("正在启动 FastAPI 服务...")
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8521, reload=True)
 
 if __name__ == "__main__":
     main()

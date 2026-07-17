@@ -15,7 +15,7 @@ class DbUsersCrudInput(BaseModel):
         None, description="用户 ID（get / update / delete 时需要）"
     )
     name: Optional[str] = Field(
-        None, description="用户姓名（create 或 update 时可用）"
+        None, description="用户姓名（create / get / update 时可用）"
     )
     email: Optional[str] = Field(
         None, description="用户邮箱（create 或 update 时可用）"
@@ -58,13 +58,25 @@ async def db_users_crud(
                 return "当前数据库 users 表中的用户列表：\n" + "\n".join(lines)
 
             elif action == 'get':
-                if not id:
-                    return "查询单个用户需要提供 id。"
+                if not id and not name:
+                    return "查询用户需要提供 id 或 name。"
                 
-                user = await session.get(User, id)
-                if not user:
-                    return f"ID 为 {id} 的用户在数据库中不存在。"
-                return f"用户信息：ID={user.id}，姓名={user.name}，邮箱={user.email}，创建时间={user.created_at.strftime('%Y-%m-%d %H:%M:%S') if user.created_at else ''}"
+                if id:
+                    user = await session.get(User, id)
+                    if not user:
+                        return f"ID 为 {id} 的用户在数据库中不存在。"
+                    return f"用户信息：ID={user.id}，姓名={user.name}，邮箱={user.email}，创建时间={user.created_at.strftime('%Y-%m-%d %H:%M:%S') if user.created_at else ''}"
+                else:
+                    result = await session.execute(select(User).where(User.name == name))
+                    users = result.scalars().all()
+                    if not users:
+                        return f"姓名为 {name} 的用户在数据库中不存在。"
+                    
+                    lines = [
+                        f"ID={u.id}，姓名={u.name}，邮箱={u.email}，创建时间={u.created_at.strftime('%Y-%m-%d %H:%M:%S') if u.created_at else ''}" 
+                        for u in users
+                    ]
+                    return f"查找到 {len(users)} 个姓名为 {name} 的用户：\n" + "\n".join(lines)
 
             elif action == 'update':
                 if not id:

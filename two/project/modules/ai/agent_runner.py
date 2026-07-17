@@ -76,6 +76,69 @@ def run_agent_loop(
     return response
 
 
+async def run_agent_loop_async(
+    model_with_tools: Runnable,
+    tools: List[BaseTool],
+    messages: List[BaseMessage],
+    max_iterations: int = 30
+) -> AIMessage:
+    """
+    封装的 Agent 运行循环（异步版）
+    支持异步工具（如 db_users_crud）的调用。
+    """
+    print("🤖 [Agent] 思考中...")
+    response: AIMessage = await model_with_tools.ainvoke(messages)
+    messages.append(response)
+    
+    iteration = 0
+    while response.tool_calls and len(response.tool_calls) > 0:
+        if iteration >= max_iterations:
+            print(f"\n❌ [Agent] 达到最大循环次数 ({max_iterations})，强制退出以防死循环！")
+            break
+            
+        iteration += 1
+        tool_names = ", ".join([tc['name'] for tc in response.tool_calls])
+        print(f"\n🔧 [Agent] 决定调用 {len(response.tool_calls)} 个工具: {tool_names}")
+        
+        for tool_call in response.tool_calls:
+            target_tool = next((t for t in tools if t.name == tool_call['name']), None)
+            
+            if not target_tool:
+                messages.append(ToolMessage(
+                    content=f"Error: No tool found with name {tool_call['name']}",
+                    tool_call_id=tool_call['id'],
+                    name=tool_call['name']
+                ))
+                continue
+            
+            try:
+                print(f"   -> 异步执行工具 [{target_tool.name}]...")
+                if hasattr(target_tool, "ainvoke"):
+                    tool_result = await target_tool.ainvoke(tool_call['args'])
+                else:
+                    tool_result = target_tool.invoke(tool_call['args'])
+                
+                messages.append(ToolMessage(
+                    content=str(tool_result),
+                    tool_call_id=tool_call['id'],
+                    name=tool_call['name']
+                ))
+            except Exception as e:
+                print(f"   -> 工具 [{target_tool.name}] 执行出错: {str(e)}")
+                messages.append(ToolMessage(
+                    content=f"Error executing tool: {str(e)}",
+                    tool_call_id=tool_call['id'],
+                    name=tool_call['name']
+                ))
+                
+        print("\n🤖 [Agent] 工具执行完毕，正在基于结果继续思考...")
+        response = await model_with_tools.ainvoke(messages)
+        messages.append(response)
+        
+    print("\n✅ [Agent] 任务完成！\n")
+    return response
+
+
 async def run_agent_loop_stream(
     model_with_tools: Runnable,
     tools: List[BaseTool],
