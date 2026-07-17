@@ -37,8 +37,5 @@ async def post_chat(request: ChatRequest):
     # 它会明确告诉前端的 useChat，这不仅是一个普通文本流，而是遵循 Vercel 0: 9: a: 等标记的数据流协议
     return StreamingResponse(
         stream_generator,
-        media_type="text/plain; charset=utf-8",
-        headers={
-            "x-vercel-ai-data-stream": "v1"
-        }
+        media_type="text/plain; charset=utf-8"
     )

@@ -3,9 +3,10 @@ import asyncio
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
-import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from contextlib import asynccontextmanager
 
 from modules.core.response import APIException
 from modules.job.job_service import global_scheduler, job_service_instance
@@ -26,14 +27,25 @@ from modules.user.user_controller import router as user_router
 # 引入最新的用于适配 Vercel SDK 的聊天路由
 from modules.chat.chat_controller import chat_router
 
-# 实例化应用主体
-app = FastAPI(title="Project API with FastAPI")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("\n====== 🚀 已注册的路由列表 ======")
+    print_routes(app.routes)
+    print("================================\n")
+    
+    # 启动定时任务调度器
+    global_scheduler.start()
+    await job_service_instance.init_jobs()
+    print("====== ⏰ 定时任务调度器已启动 ======\n")
+    yield
+
+app = FastAPI(title="Project API with FastAPI", lifespan=lifespan)
 
 # 允许跨域请求 (CORS) 解决前端直连后端的报错
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], # 开发环境允许所有来源
-    allow_credentials=True,
+    allow_credentials=False, # 关键修复：当 allow_origins 为 * 时，这里必须为 False
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"], # 极度关键：允许前端读取 x-vercel-ai-data-stream 响应头
@@ -78,16 +90,7 @@ def print_routes(routes):
         elif hasattr(route, "routes"):
             print_routes(route.routes)
 
-@app.on_event("startup")
-async def startup_event():
-    print("\n====== 🚀 已注册的路由列表 ======")
-    print_routes(app.routes)
-    print("================================\n")
-    
-    # 启动定时任务调度器
-    global_scheduler.start()
-    await job_service_instance.init_jobs()
-    print("====== ⏰ 定时任务调度器已启动 ======\n")
+
 
 def main():
     # 使用 uvicorn 启动服务，支持热更新

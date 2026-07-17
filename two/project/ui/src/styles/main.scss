@@ -1,0 +1,44 @@
+// ============================================================
+// Global Stylesheet Entry Point
+// ============================================================
+
+// 1. Design tokens (CSS custom properties)
+@use 'tokens';
+
+// 2. Reset
+@use 'reset';
+
+// 3. Animations & transitions
+@use 'animations';
+
+// 4. Markdown / prose
+@use 'markdown';
+
+// 5. Google Fonts
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+// 6. KaTeX
+@import 'katex/dist/katex.min.css';
+
+// 7. highlight.js theme (GitHub Dark — works in both themes)
+@import 'highlight.js/styles/github-dark-dimmed.css';
+
+// ── Global utility classes ──────────────────────────────────
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
