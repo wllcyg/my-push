@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from modules.core.response import APIException
@@ -22,13 +23,26 @@ if sys.platform == "win32":
 from modules.ai.ai_controller import router as ai_router
 # 引入用户模块路由
 from modules.user.user_controller import router as user_router
+# 引入最新的用于适配 Vercel SDK 的聊天路由
+from modules.chat.chat_controller import chat_router
 
 # 实例化应用主体
 app = FastAPI(title="Project API with FastAPI")
 
+# 允许跨域请求 (CORS) 解决前端直连后端的报错
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # 开发环境允许所有来源
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"], # 极度关键：允许前端读取 x-vercel-ai-data-stream 响应头
+)
+
 # 注册模块路由（相当于 NestJS 根模块里的 imports: [AiModule, UserModule]）
 app.include_router(ai_router)
 app.include_router(user_router)
+app.include_router(chat_router)
 
 # 注册全局异常拦截
 @app.exception_handler(APIException)
