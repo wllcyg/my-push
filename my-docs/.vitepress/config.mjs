@@ -39,6 +39,16 @@ export default defineConfig({
         sortMenusOrderByDescending: false,
         rootGroupText: 'Flutter 开发指南',
         collapsed: false
+      },
+      {
+        documentRootPath: '/',
+        scanStartPath: 'docs/why', 
+        resolvePath: '/docs/why/',
+        useTitleFromFileHeading: true,
+        useTitleFromFrontmatter: true,
+        sortMenusOrderByDescending: false,
+        rootGroupText: '随笔杂谈',
+        collapsed: false
       }
     ])
   }
