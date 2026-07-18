@@ -84,7 +84,10 @@ const DOMPURIFY_CONFIG: Config = {
     // KaTeX
     'math', 'semantics', 'mrow', 'mi', 'mo', 'mn', 'mfrac',
     'msqrt', 'mroot', 'munder', 'mover', 'munderover',
-    'msub', 'msup', 'msubsup', 'annotation',
+    'msub', 'msup', 'msubsup', 'annotation', 'annotation-xml',
+    'mtable', 'mtr', 'mtd', 'maligngroup', 'malignmark',
+    'menclose', 'mfenced', 'mpadded', 'mphantom', 'mspace', 
+    'mstyle', 'mtext',
   ],
   ALLOWED_ATTR: [
     'href', 'src', 'alt', 'title', 'class', 'type', 'checked', 'disabled',
