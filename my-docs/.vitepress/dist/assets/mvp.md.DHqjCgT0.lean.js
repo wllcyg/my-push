@@ -1,0 +1,1 @@
+import{_ as a,o as r,c as d,a2 as o}from"./chunks/framework.DZO5kRrk.js";const b=JSON.parse('{"title":"证件照工坊 — 产品需求文档(PRD)","description":"","frontmatter":{},"headers":[],"relativePath":"mvp.md","filePath":"mvp.md"}'),e={name:"mvp.md"};function l(i,t,h,n,u,s){return r(),d("div",null,[...t[0]||(t[0]=[o("",51)])])}const _=a(e,[["render",l]]);export{b as __pageData,_ as default};

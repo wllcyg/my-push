@@ -126,8 +126,6 @@ await router.invoke({ key: "toUpperCase", input: "hello" });
 
 在多轮对话中，我们必须要管理“聊天历史”。
 
-![State & Memory Management](/images/lcel_04_memory.png)
-
 ### 旧时代：RunnableWithMessageHistory
 通过拦截输入和输出，向外部数据库存取对话记录。但这在复杂的 Agent 流转中显得极其笨重，因此**已经被官方标记为废弃 (Deprecated)**。
 
