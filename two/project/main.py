@@ -27,6 +27,9 @@ from modules.user.user_controller import router as user_router
 # 引入最新的用于适配 Vercel SDK 的聊天路由
 from modules.chat.chat_controller import chat_router
 
+from modules.config.settings import get_settings
+from modules.elasticsearch.es_service import es_service
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("\n====== 🚀 已注册的路由列表 ======")
@@ -37,7 +40,16 @@ async def lifespan(app: FastAPI):
     global_scheduler.start()
     await job_service_instance.init_jobs()
     print("====== ⏰ 定时任务调度器已启动 ======\n")
+    
+    # 初始化 Elasticsearch 连接
+    settings = get_settings()
+    if settings.es_host:
+        await es_service.connect(settings.es_host)
+
     yield
+
+    # 关闭 Elasticsearch 连接
+    await es_service.close()
 
 app = FastAPI(title="Project API with FastAPI", lifespan=lifespan)
 

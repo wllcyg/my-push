@@ -22,3 +22,6 @@ card-worker/.dev.vars
 
 # macOS
 .DS_Store
+
+
+volumes/

@@ -17,7 +17,13 @@ def get_embeddings() -> OpenAIEmbeddings:
     )
 
 @lru_cache(maxsize=1)
-def get_vector_store(collection_name: str) -> Milvus:
+def get_vector_store(
+    collection_name: str, 
+    text_field: str = "content",
+    primary_field: str = "id",
+    vector_field: str = "vector",
+    metric_type: str = "COSINE"
+) -> Milvus:
     """
     获取并初始化 Milvus VectorStore 的单例。
     通过 lru_cache 防止重复连接。
@@ -31,16 +37,17 @@ def get_vector_store(collection_name: str) -> Milvus:
         embedding_function=get_embeddings(),
         collection_name=collection_name,
         connection_args={"uri": zilliz_endpoint, "token": zilliz_api_key},
-        text_field="content",
-        primary_field="id",
-        vector_field="vector",
+        text_field=text_field,
+        primary_field=primary_field,
+        vector_field=vector_field,
+        auto_id=True,
         index_params={
-            "metric_type": "COSINE",
+            "metric_type": metric_type,
             "index_type": "HNSW",
             "params": {"M": 16, "efConstruction": 200}
         },
         search_params={
-            "metric_type": "COSINE",
+            "metric_type": metric_type,
             "params": {"ef": 64}
         }
     )

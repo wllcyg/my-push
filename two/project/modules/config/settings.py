@@ -15,10 +15,14 @@ class Settings(BaseSettings):
     open_ai_baseuel: str | None = None
     open_ai_model_name: str | None = None
     open_ai_embedding_name: str | None = None
+    qwen3_vl_rerank: str | None = None
 
     # --- Zilliz 向量库配置 ---
     zilliz_endpoint: str | None = None
     zilliz_api_key: str | None = None
+
+    # --- Elasticsearch 配置 ---
+    es_host: str = "http://localhost:9200"
 
     # --- 数据库配置 ---
     db_host: str | None = None
