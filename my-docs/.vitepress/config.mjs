@@ -14,6 +14,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Flutter', link: '/docs/flutter/learning-guide' },
       { text: 'AI & Agent', link: '/docs/ai/01-agent-learning' },
+      { text: '随笔杂谈', link: '/docs/why/在忘忧AI的第两百一十九天' },
       { text: 'Tiptap Editor 在线体验', link: 'https://editor.cheatppf.xyz/' }
     ],
     socialLinks: [

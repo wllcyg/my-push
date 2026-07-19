@@ -9,6 +9,7 @@
         <nav>
           <a href="/docs/flutter/learning-guide">Flutter</a>
           <a href="/docs/ai/01-agent-learning">AI & Agent</a>
+          <a href="/docs/why/在忘忧AI的第两百一十九天">随笔杂谈</a>
         </nav>
       </header>
 
@@ -91,11 +92,25 @@
               </svg>
             </div>
             <div class="card-content">
-              <h2>AI & Agent 探索</h2>
+              <h2>AI & Agent 探砸</h2>
               <p>涵盖大语言模型、智能体框架应用，以及 RAG 检索增强等核心前沿技术沉淀。</p>
             </div>
             <div class="card-arrow">
-              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+            </div>
+          </a>
+          <a href="/docs/why/在忘忧AI的第两百一十九天" class="card">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24" class="stroke-only" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </div>
+            <div class="card-content">
+              <h2>随笔杂谈</h2>
+              <p>工作之余的一些磞磞念念，关于 AI、职业与生活的随手记录。</p>
+            </div>
+            <div class="card-arrow">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
             </div>
           </a>
         </section>
@@ -264,7 +279,7 @@ nav a:hover {
 /* Cards */
 .cards {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 24px;
   margin-bottom: 100px;
 }
