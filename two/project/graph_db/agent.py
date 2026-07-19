@@ -57,6 +57,7 @@ async def generate_cypher(state: GraphState) -> dict:
 1. 关系方向绝对不能反
 2. 多跳查询请使用多个 MATCH，不要连错路径
 3. 只返回最终可运行的 Cypher 语句
+4. 【关键】为了给后续回答提供充足上下文，RETURN 语句必须返回查询链路中涉及的所有关键节点的 name 属性（如 RETURN p.name, i.name, m.name），绝对不能只 RETURN 单个节点！
 
 用户问题: {state['query']}
 """
