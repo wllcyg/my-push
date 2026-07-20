@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { UploadCloud, Copy, Image as ImageIcon, Trash2, LogIn, Loader2, Check, RefreshCw } from 'lucide-react';
 import './index.css';
 
@@ -7,32 +7,41 @@ const API_BASE = import.meta.env.DEV ? 'http://127.0.0.1:8787' : 'https://api.ch
 type Toast = { msg: string; type: string };
 type ImageItem = { key: string; url: string; size: number; uploaded: string; tags?: string };
 
-const TAG_MAP: Record<string, string> = {
-  'All': '全部',
-  'screenshot': '截图',
-  'photo': '照片',
-  'meme': '表情包',
-  'document': '文档',
-  'scenery': '风景',
-  'code': '代码',
-  'portrait': '人像',
-  'UI': '界面',
-  'None': '无标签'
-};
-
-const t = (tag: string) => TAG_MAP[tag] || tag;
-
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [isLogged, setIsLogged] = useState(!!token);
   const [images, setImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
-  const [activeTag, setActiveTag] = useState<string>('All');
+  
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // 1. 废弃原来的前端内存分页
+  // 2. 无限滚动加载逻辑 (真实后端分页)
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
+          fetchImages(false);
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    const target = loadMoreRef.current;
+    if (target) observer.observe(target);
+
+    return () => {
+      if (target) observer.unobserve(target);
+    };
+  }, [hasMore, loading, loadingMore, cursor]); // 确保状态更新时使用最新的 cursor
 
   const showToast = (msg: string, type = 'info') => {
     setToast({ msg, type });
@@ -44,7 +53,7 @@ function App() {
     if (!token) return;
     localStorage.setItem('token', token);
     setIsLogged(true);
-    fetchImages();
+    fetchImages(true);
   };
 
   const handleLogout = () => {
@@ -54,10 +63,22 @@ function App() {
     setImages([]);
   };
 
-  const fetchImages = async () => {
-    setLoading(true);
+  const fetchImages = async (reset = true) => {
+    if (reset) {
+      setLoading(true);
+      setCursor(null);
+    } else {
+      setLoadingMore(true);
+    }
+    
     try {
-      const res = await fetch(`${API_BASE}/api/images`, {
+      const query = new URLSearchParams({ limit: '30' });
+      // 如果不是重置，并且存在 cursor，则带上游标获取下一页
+      if (!reset && cursor) {
+        query.append('cursor', cursor);
+      }
+
+      const res = await fetch(`${API_BASE}/api/images?${query.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.status === 401) {
@@ -66,16 +87,21 @@ function App() {
         return;
       }
       const data = await res.json();
-      if (data.images) setImages(data.images);
+      if (data.images) {
+        setImages(prev => reset ? data.images : [...prev, ...data.images]);
+        setCursor(data.cursor);
+        setHasMore(data.hasMore);
+      }
     } catch (err) {
       showToast('Failed to fetch images', 'error');
     } finally {
-      setLoading(false);
+      if (reset) setLoading(false);
+      else setLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    if (isLogged) fetchImages();
+    if (isLogged) fetchImages(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLogged]);
 
@@ -125,7 +151,7 @@ function App() {
       const data = await res.json();
       if (data.success) {
         showToast('Image uploaded successfully!', 'success');
-        fetchImages();
+        fetchImages(true); // 上传后重置图库列表
       } else {
         showToast(data.error || 'Upload failed', 'error');
       }
@@ -145,7 +171,7 @@ function App() {
       });
       if (res.ok) {
         showToast('Image deleted', 'success');
-        fetchImages();
+        fetchImages(true); // 删除后重置图库列表
       }
     } catch (err) {
       showToast('Failed to delete image', 'error');
@@ -250,8 +276,8 @@ function App() {
 
       <div className="glass-panel">
         <div className="gallery-header">
-          <h2>Gallery ({images.length})</h2>
-          <button onClick={fetchImages} className="btn" style={{ background: 'transparent', padding: '0.5rem' }}>
+          <h2>Gallery ({images.length}{hasMore ? '+' : ''})</h2>
+          <button onClick={() => fetchImages(true)} className="btn" style={{ background: 'transparent', padding: '0.5rem' }}>
             <RefreshCw size={20} className={loading ? 'loader' : ''} />
           </button>
         </div>
@@ -267,20 +293,8 @@ function App() {
           </div>
         ) : (
           <>
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-              {['All', ...Array.from(new Set(images.flatMap(img => (img.tags && img.tags !== 'None') ? img.tags.split(',').map(tag=>tag.trim()) : [])))].filter(Boolean).map(tag => (
-                <button 
-                  key={tag} 
-                  className={`btn ${activeTag === tag ? 'btn-primary' : ''}`}
-                  onClick={() => setActiveTag(tag)}
-                  style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem', background: activeTag === tag ? '' : 'rgba(255,255,255,0.1)' }}
-                >
-                  {t(tag)}
-                </button>
-              ))}
-            </div>
             <div className="gallery-grid">
-              {images.filter(img => activeTag === 'All' || (img.tags && img.tags.includes(activeTag))).map((img) => (
+              {images.map((img) => (
                 <div key={img.key} className="image-card">
                   <img src={img.url} alt={img.key} loading="lazy" />
                   <div className="image-overlay">
@@ -298,12 +312,19 @@ function App() {
                   <div className="image-info">{img.key}</div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
                     <span>{(img.size / 1024).toFixed(1)} KB</span>
-                    <span>{(img.tags || 'None').split(',').map(tag => t(tag.trim())).join(', ')}</span>
+                    <span>{new Date(img.uploaded).toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>
             ))}
             </div>
+            
+            {/* 4. 底部哨兵元素：如果后端还有更多数据，则渲染该哨兵，IntersectionObserver 就能触发下一页加载 */}
+            {hasMore && (
+              <div ref={loadMoreRef} style={{ height: '30px', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '1rem 0' }}>
+                {loadingMore && <Loader2 size={24} className="loader" style={{ color: 'var(--text-muted)' }} />}
+              </div>
+            )}
           </>
         )}
       </div>
