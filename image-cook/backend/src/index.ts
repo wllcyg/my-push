@@ -79,7 +79,13 @@ app.post('/api/upload', async (c) => {
 })
 
 app.get('/api/images', async (c) => {
-  const list = await c.env.IMAGE_BUCKET.list({ include: ['customMetadata'] })
+  const limit = parseInt(c.req.query('limit') || '30', 10)
+  const cursor = c.req.query('cursor')
+  
+  const options: any = { limit, include: ['customMetadata'] }
+  if (cursor) options.cursor = cursor
+  
+  const list = await c.env.IMAGE_BUCKET.list(options)
   const url = new URL(c.req.url)
   const images = list.objects.map(obj => ({
     key: obj.key,
@@ -88,8 +94,15 @@ app.get('/api/images', async (c) => {
     url: `${url.origin}/i/${obj.key}`,
     tags: obj.customMetadata?.tags || 'None'
   }))
+  
+  // 注意：R2 原生游标分页会按 key 字典序返回。这里仅作页内倒序。
   images.sort((a, b) => new Date(b.uploaded).getTime() - new Date(a.uploaded).getTime())
-  return c.json({ images })
+  
+  return c.json({ 
+    images,
+    cursor: list.truncated ? list.cursor : null,
+    hasMore: list.truncated
+  })
 })
 
 app.delete('/api/images/:key', async (c) => {
