@@ -51,7 +51,8 @@ app.post('/api/upload', async (c) => {
   }
   
   const ext = file.name.split('.').pop()
-  const key = `${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 8)}.${ext}`
+  const reverseTime = (Number.MAX_SAFE_INTEGER - Date.now()).toString(36).padStart(11, '0')
+  const key = `${reverseTime}-${Math.random().toString(36).substring(2, 8)}.${ext}`
   
   const arrayBuffer = await file.arrayBuffer()
   let tags = 'None';
