@@ -1,5 +1,5 @@
 # RAG 模块与量化评测体系实战总结 (LangSmith & OpenEvals)
-
+![image](https://api.cheatppf.xyz/i/2go5idq2ymz-vqyj4l.png)
 ## 一、量化评测 (Quantitative Evaluation) 的核心策略
 
 在构建基于大语言模型（LLM）的检索增强生成（RAG）应用时，如何客观、量化地衡量 RAG 系统的回答质量一直是个难题。单纯凭借肉眼看几个 Case 无法指导长期的优化迭代。因此，我们需要引入**LLM-as-a-Judge（大模型做裁判）**加上成熟的评测平台（如 LangSmith），来维持迭代的可预测性与准确性：
