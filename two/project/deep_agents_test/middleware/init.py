@@ -13,7 +13,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, AsyncGenerator
 
 
 # ============================================================
@@ -126,8 +126,9 @@ class AgentMiddleware:
     def after_agent(self, state: AgentState, runtime: Any = None) -> Optional[Dict]:
         return None
 
-    def wrap_model_call(self, request: ModelRequest, handler: Callable[[ModelRequest], ModelResponse]) -> ModelResponse:
-        return handler(request)
+    async def wrap_model_call(self, request: ModelRequest, handler: Callable[[ModelRequest], AsyncGenerator]) -> AsyncGenerator:
+        async for chunk in handler(request):
+            yield chunk
 
     def wrap_tool_call(self, tool_call: Dict, handler: Callable[[Dict], Any]) -> Any:
         return handler(tool_call)
@@ -153,10 +154,15 @@ class AgentExecutor:
         self.max_iterations = max_iterations
 
     # ---- 洋葱包裹：model ----
-    def _build_model_chain(self) -> Callable[[ModelRequest], ModelResponse]:
+    def _build_model_chain(self) -> Callable[[ModelRequest], AsyncGenerator]:
         handler = self.model_fn
         for mw in reversed(self.middleware):
-            handler = (lambda h, m: (lambda req: m.wrap_model_call(req, h)))(handler, mw)
+            def make_wrapped(h, m):
+                async def wrapped_handler(req: ModelRequest):
+                    async for chunk in m.wrap_model_call(req, h):
+                        yield chunk
+                return wrapped_handler
+            handler = make_wrapped(handler, mw)
         return handler
 
     # ---- 洋葱包裹：tool ----
@@ -172,7 +178,7 @@ class AgentExecutor:
             handler = (lambda h, m: (lambda tc: m.wrap_tool_call(tc, h)))(handler, mw)
         return handler
 
-    def invoke(self, initial_state: Dict) -> Dict:
+    async def astream(self, initial_state: Dict) -> AsyncGenerator[Dict, None]:
         state = AgentState(initial_state)
 
         # 1. before_agent —— 正序
@@ -181,9 +187,8 @@ class AgentExecutor:
             merge_state(state, res)
             if res and res.get("jump_to") == "end":
                 _check_jump_allowed(mw.before_agent, "end", mw.__class__.__name__, "before_agent")
-                return {"messages": state.get("messages", []), **state}
-
-        response: Optional[AIMessage] = None
+                yield {"event": "on_chain_end", "data": {"output": dict(state)}}
+                return
 
         for _ in range(self.max_iterations):
             # 2. before_model —— 正序，支持短路
@@ -202,10 +207,20 @@ class AgentExecutor:
             request = ModelRequest(
                 messages=state.get("messages", []),
                 system_prompt=self.system_prompt,
-                tools=list(self.tools_by_name.keys()),
+                tools=list(self.tools_by_name.values()),
             )
             model_chain = self._build_model_chain()
-            response = model_chain(request)
+            
+            response = None
+            async for chunk in model_chain(request):
+                if chunk["event"] == "on_chat_model_stream":
+                    yield chunk
+                elif chunk["event"] == "on_model_end":
+                    response = chunk["data"]["response"]
+                    
+            if response is None:
+                response = AIMessage(content="", tool_calls=[])
+                
             merge_state(state, {"messages": [response]})
 
             # 4. after_model —— 反序
@@ -218,7 +233,9 @@ class AgentExecutor:
                 tool_chain = self._build_tool_chain()
                 tool_messages = []
                 for tc in response.tool_calls:
+                    yield {"event": "on_tool_start", "name": tc.get("name"), "data": tc}
                     result = tool_chain(tc)
+                    yield {"event": "on_tool_end", "name": tc.get("name"), "data": {"output": result}}
                     tool_messages.append(ToolMessage(content=str(result), tool_call_id=tc.get("id", "")))
                 merge_state(state, {"messages": tool_messages})
                 continue  # 回到循环顶部，带着 tool 结果再问一次模型
@@ -230,11 +247,11 @@ class AgentExecutor:
             res = mw.after_agent(state)
             merge_state(state, res)
 
-        return dict(state)
+        yield {"event": "on_chain_end", "data": {"output": dict(state)}}
 
 
 def create_agent(
-    model: Callable[[ModelRequest], ModelResponse],
+    model: Callable[[ModelRequest], AsyncGenerator],
     tools: Optional[List[Callable]] = None,
     system_prompt: str = "",
     middleware: Optional[List[AgentMiddleware]] = None,

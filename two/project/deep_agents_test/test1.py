@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage as LcHumanMessage
 from langchain_core.messages import AIMessage as LcAIMessage
 from modules.core.llm import default_model
 
-from middleware.init import (
+from deep_agents_test.middleware.init import (
     create_agent,
     AgentMiddleware,
     hook_config,
@@ -65,47 +65,34 @@ class BlockedContentMiddleware(AgentMiddleware):
                 }
 
 
-# 适配器：将 Middleware 引擎的请求转为 LangChain 格式并调用大模型
-def model_adapter(request: ModelRequest) -> ModelResponse:
-    lc_messages = []
-    if request.system_prompt:
-        lc_messages.append(SystemMessage(content=request.system_prompt))
-    
-    for m in request.messages:
-        if m.role == "human":
-            lc_messages.append(LcHumanMessage(content=m.content))
-        elif m.role == "ai":
-            lc_messages.append(LcAIMessage(content=m.content))
-            
-    # 调用 langchain model
-    lc_response = default_model.invoke(lc_messages)
-    
-    # 包装为自定义的 AIMessage
-    return AIMessage(
-        content=lc_response.content,
-        tool_calls=getattr(lc_response, "tool_calls", [])
+from deep_agents_test.middleware.adapters import create_langchain_adapter
+
+import asyncio
+
+async def main():
+    agent = create_agent(
+        model=create_langchain_adapter(default_model),
+        tools=[],
+        system_prompt="你是一个助手。",
+        middleware=[
+            LoggingMiddleware(),
+            AddContextMiddleware(),
+            BlockedContentMiddleware()
+        ]
     )
 
-
-# 创建 Agent
-agent = create_agent(
-    model=model_adapter,
-    tools=[],
-    system_prompt="你是一个助手。",
-    middleware=[
-        LoggingMiddleware(),
-        AddContextMiddleware(),
-        BlockedContentMiddleware()
-    ]
-)
+    for text in ["你好", "给我看点BLOCKED的东西", "你是谁"]:
+        print(f"\n用户: {text}")
+        print("\n--- 流式输出 ---\n")
+        
+        async for event in agent.astream({"messages": [HumanMessage(text)]}):
+            if event["event"] == "on_chat_model_stream":
+                print(event["data"]["chunk"], end="", flush=True)
+            elif event["event"] == "on_chain_end":
+                output = event["data"]["output"]
+                messages = output.get("messages", [])
+                last_msg = messages[-1].content if messages else None
+                print(f"\n\n回复: {last_msg}")
 
 if __name__ == "__main__":
-    for text in ["用中文说：middleware 是什么？", "这句话包含 BLOCKED 关键词"]:
-        print(f"\n用户: {text}")
-        result = agent.invoke({
-            "messages": [HumanMessage(text)]
-        })
-        
-        last_msg = result.get("messages", [])[-1]
-        print(f"回复: {last_msg.content}")
-        print(f"model_call_count: {result.get('model_call_count', 0)}")
+    asyncio.run(main())
