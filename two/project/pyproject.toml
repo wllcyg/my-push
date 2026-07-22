@@ -26,5 +26,6 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "sqlalchemy>=2.0.51",
     "sse-starlette>=3.4.5",
+    "typing-extensions>=4.16.0",
     "uvicorn>=0.51.0",
 ]
