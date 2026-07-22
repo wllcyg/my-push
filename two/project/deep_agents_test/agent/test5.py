@@ -10,7 +10,10 @@ load_dotenv(root_dir / ".env")
 from langchain_core.tools import tool
 from modules.core.llm import default_model
 from deep_agents_test.agent.react_agent import create_agent
-from deep_agents_test.agent.middlewares import apply_middlewares
+from deep_agents_test.agent.logger_middleware import MultiAgentLoggingCallback, ExecutionTraceTracker
+
+# 全局 Trace 追踪器实例
+trace_tracker = ExecutionTraceTracker()
 
 # ==========================================
 # 1. 定义子 Agent 所需的基础数学工具
@@ -66,37 +69,37 @@ def make_similar_problem(template: str, seed: int) -> str:
 @tool
 async def run_math_solver(problem: str) -> str:
     """解题子 Agent: 负责用 calc, divide_evenly 工具对小学应用题进行精准列式计算"""
-    print("\n[SubAgent: math-solver] 正在精准计算题目...")
+    cb = MultiAgentLoggingCallback(agent_name="SubAgent: math-solver", is_subagent=True, tracker=trace_tracker)
     solver_agent = create_agent(
         default_model, 
         tools=[calc, divide_evenly], 
         system_prompt="你是解题子 Agent。必须用 calc 和 divide_evenly 工具完成计算，不要自己心算。输出步骤与结果。"
     )
-    res = await solver_agent.ainvoke({"messages": [("human", problem)]})
+    res = await solver_agent.ainvoke({"messages": [("human", problem)]}, config={"callbacks": [cb]})
     return res["messages"][-1].content
 
 @tool
 async def run_kid_tutor(math_solution: str) -> str:
     """讲题子 Agent: 面向家长，把数学解法翻译成通俗、口语化的辅导话术"""
-    print("\n[SubAgent: kid-tutor] 正在生成面向家长的讲题话术...")
+    cb = MultiAgentLoggingCallback(agent_name="SubAgent: kid-tutor", is_subagent=True, tracker=trace_tracker)
     tutor_agent = create_agent(
         default_model, 
         tools=[], 
         system_prompt="你是讲题子 Agent，面向小学生家长。根据输入的解题过程，用通俗短句和比喻说明先算什么、再算什么。"
     )
-    res = await tutor_agent.ainvoke({"messages": [("human", math_solution)]})
+    res = await tutor_agent.ainvoke({"messages": [("human", math_solution)]}, config={"callbacks": [cb]})
     return res["messages"][-1].content
 
 @tool
 async def run_practice_maker(request_desc: str) -> str:
     """出题子 Agent: 必须调用 make_similar_problem 工具生成 2 道同类练习题"""
-    print("\n[SubAgent: practice-maker] 正在生成举一反三练习题...")
+    cb = MultiAgentLoggingCallback(agent_name="SubAgent: practice-maker", is_subagent=True, tracker=trace_tracker)
     maker_agent = create_agent(
         default_model, 
         tools=[make_similar_problem], 
         system_prompt="你是出题子 Agent。必须调用 make_similar_problem 工具至少 2 次生成练习题。"
     )
-    res = await maker_agent.ainvoke({"messages": [("human", request_desc)]})
+    res = await maker_agent.ainvoke({"messages": [("human", request_desc)]}, config={"callbacks": [cb]})
     return res["messages"][-1].content
 
 # ==========================================
@@ -105,7 +108,6 @@ async def run_practice_maker(request_desc: str) -> str:
 async def main():
     print("=== 开始运行 Python 版 Multi-Agent (主子 Agent) 协作测试 ===")
     
-    # 主 Agent 的工具就是 3 个子 Agent！
     subagent_tools = [run_math_solver, run_kid_tutor, run_practice_maker]
     
     main_agent_graph = create_agent(
@@ -120,16 +122,25 @@ async def main():
 """
     )
     
-    # 挂载全局中间件与日志
-    chat_agent = apply_middlewares(main_agent_graph)
-
     user_query = "孩子遇到这道题：「小明有 24 块糖，平均分给 6 个同学；妈妈又买了 3 包糖，每包 5 块。每个同学现在一共有多少块？」"
     print(f"\n用户提问:\n{user_query}\n")
     
-    reply = await chat_agent(user_query)
+    # 挂载 Supervisor 专属日志 Callbacks，并关联共享的 trace_tracker
+    supervisor_cb = MultiAgentLoggingCallback(agent_name="Supervisor", is_subagent=False, tracker=trace_tracker)
+    
+    response_state = await main_agent_graph.ainvoke(
+        {"messages": [("human", user_query)]},
+        config={"callbacks": [supervisor_cb]}
+    )
+    reply = response_state["messages"][-1].content
+
     print("\n" + "="*40)
     print("【主 Agent 最终给家长的汇总报告】:\n")
     print(reply)
+
+    print("\n" + "="*40)
+    print("【全链路结构化 Trace (调用公共 logger_middleware 导出)】:\n")
+    print(trace_tracker.to_json())
 
 if __name__ == "__main__":
     asyncio.run(main())
