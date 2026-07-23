@@ -1,5 +1,5 @@
 # DeepAgents 中间件完全手册
-
+![image](https://api.cheatppf.xyz/i/2go5iathbl6-63drt6.png)
 `deep_agents.middlewares` 包含了框架内置的 6 大独立插件化中间件。
 
 导入路径：
