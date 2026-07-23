@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     es_host: str = "http://localhost:9200"
 
     # --- 数据库配置 ---
+    database_url: str | None = None
     db_host: str | None = None
     db_port: int | None = None
     db_username: str | None = None
