@@ -55,6 +55,7 @@ researcher_prompt = dedent("""\
     ## 其他规则
 
     - 不要重复相同的搜索关键词
+    - 若连续搜索 2 次未找到满意结果，直接记录已获信息并写入 findings，禁止无限换词重试
     - write_file 完成后禁止再次搜索——你的任务已结束
     - 其他人只能看到你写入的文件，内容必须完整、自洽
     - **所有输出必须使用中文**（专有名词如 LangGraph 可保留英文）
@@ -64,7 +65,8 @@ researcher_prompt = dedent("""\
 researcher_agent = create_agent(
     llm=default_model,
     tools=[web_search] + todo_tools + fs_tools,
-    system_prompt=researcher_prompt
+    system_prompt=researcher_prompt,
+    default_recursion_limit=10
 )
 
 # -- Editor --
@@ -94,7 +96,8 @@ editor_prompt = dedent("""\
 editor_agent = create_agent(
     llm=default_model,
     tools=read_only_tools,
-    system_prompt=editor_prompt
+    system_prompt=editor_prompt,
+    default_recursion_limit=8
 )
 
 # -- Analyst --
@@ -113,7 +116,8 @@ analyst_prompt = dedent("""\
 analyst_agent = create_agent(
     llm=default_model,
     tools=[python_repl] + fs_tools,
-    system_prompt=analyst_prompt
+    system_prompt=analyst_prompt,
+    default_recursion_limit=10
 )
 
 # ==========================================
@@ -124,7 +128,7 @@ subagent_tools = create_subagent_tools({
     "researcher": researcher_agent,
     "editor": editor_agent,
     "analyst": analyst_agent
-})
+}, default_timeout=90.0)
 
 orchestrator_base_prompt = dedent("""\
     你是「深度调研助手」的主 Agent，负责协调调研、分析与编辑，产出高质量调研简报。
@@ -197,5 +201,7 @@ orchestrator_prompt = create_memory_prompt(
 orchestrator_agent = create_agent(
     llm=default_model,
     tools=todo_tools + subagent_tools + fs_tools,
-    system_prompt=orchestrator_prompt
+    system_prompt=orchestrator_prompt,
+    default_recursion_limit=30
 )
+

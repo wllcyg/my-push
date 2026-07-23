@@ -14,12 +14,54 @@ class AgentState(TypedDict):
 from deep_agents_test.agent.context_middleware import trim_context_messages
 
 
+def _check_tool_loop(messages: list[BaseMessage], max_repeats: int = 3) -> bool:
+    """检查最近的 AIMessage 是否陷入连续重复调用同一工具参数的死循环"""
+    recent_calls = []
+    for msg in reversed(messages):
+        if isinstance(msg, AIMessage) and msg.tool_calls:
+            for tc in msg.tool_calls:
+                key = (tc.get("name"), str(tc.get("args")))
+                recent_calls.append(key)
+                if len(recent_calls) >= max_repeats:
+                    if len(set(recent_calls[:max_repeats])) == 1:
+                        return True
+        elif isinstance(msg, SystemMessage):
+            continue
+    return False
+
+
+class CompiledAgentWrapper:
+    """包装 CompiledStateGraph，默认注入 recursion_limit 保护"""
+    def __init__(self, compiled_graph, default_recursion_limit: int = 25):
+        self._graph = compiled_graph
+        self.default_recursion_limit = default_recursion_limit
+
+    async def ainvoke(self, input: Any, config: Optional[dict] = None, **kwargs: Any) -> Any:
+        if config is None:
+            config = {}
+        if "recursion_limit" not in config:
+            config["recursion_limit"] = self.default_recursion_limit
+        return await self._graph.ainvoke(input, config=config, **kwargs)
+
+    def invoke(self, input: Any, config: Optional[dict] = None, **kwargs: Any) -> Any:
+        if config is None:
+            config = {}
+        if "recursion_limit" not in config:
+            config["recursion_limit"] = self.default_recursion_limit
+        return self._graph.invoke(input, config=config, **kwargs)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._graph, name)
+
+
 def create_agent(
     llm, 
     tools, 
     system_prompt: str = "", 
     response_schema: type[BaseModel] | None = None,
-    max_context_messages: int = 30
+    max_context_messages: int = 30,
+    default_recursion_limit: int = 25,
+    max_same_tool_calls: int = 3,
 ):
     """
     Agent 构建工厂。
@@ -38,6 +80,13 @@ def create_agent(
         # 自动触发上下文裁剪与压缩
         messages = trim_context_messages(messages, max_messages=max_context_messages)
 
+        # 防死循环检测：如果发现历史记录中连续多次调用完全相同的工具参数
+        if _check_tool_loop(messages, max_repeats=max_same_tool_calls):
+            warning_msg = AIMessage(
+                content="【系统防死循环拦截】：检测到连续多次尝试完全相同的工具调用，已被系统强行熔断。请直接基于已获取的信息给出最终答复或结论。"
+            )
+            return {"messages": [warning_msg]}
+
         response = await llm_with_tools.ainvoke(messages)
         return {"messages": [response]}
 
@@ -48,9 +97,20 @@ def create_agent(
     workflow.set_entry_point("agent")
     workflow.add_edge("tools", "agent")
 
+    # 条件路由逻辑：带防死循环逻辑
+    def route_after_agent(state: AgentState):
+        messages = state["messages"]
+        last_msg = messages[-1] if messages else None
+        if isinstance(last_msg, AIMessage) and "【系统防死循环拦截】" in last_msg.content:
+            return "formatter" if response_schema else END
+
+        next_step = tools_condition(state)
+        if next_step == END:
+            return "formatter" if response_schema else END
+        return next_step
+
     # 如果配置了输出结构约束，自动挂载【阶段 2：格式化节点】
     if response_schema:
-        # 使用 with_structured_output 绑定 Pydantic 模型，做硬约束
         structured_llm = llm.with_structured_output(response_schema)
 
         async def formatter_node(state: AgentState):
@@ -64,19 +124,12 @@ def create_agent(
             }
 
         workflow.add_node("formatter", formatter_node)
-
-        # 自定义路由逻辑：需要调工具跳 'tools'，调完回到 'agent'；不需要调工具时跳 'formatter' 做硬约束提炼
-        def route_after_agent(state: AgentState):
-            next_step = tools_condition(state)
-            if next_step == END:
-                return "formatter"
-            return next_step
-
         workflow.add_conditional_edges("agent", route_after_agent)
         workflow.add_edge("formatter", END)
     else:
-        # 没有 response_schema，维持原本的标准 ReAct 流程
-        workflow.add_conditional_edges("agent", tools_condition)
+        workflow.add_conditional_edges("agent", route_after_agent)
 
-    return workflow.compile()
+    compiled_graph = workflow.compile()
+    return CompiledAgentWrapper(compiled_graph, default_recursion_limit=default_recursion_limit)
+
 

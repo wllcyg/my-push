@@ -3,12 +3,13 @@ from typing import Dict, Any, List
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 
-def create_subagent_tools(subagents: Dict[str, Any]):
+def create_subagent_tools(subagents: Dict[str, Any], default_timeout: float = 90.0):
     """
     创建子 Agent 委派工具组 (包含单次委派工具与高并发并行委派工具)。
     
     Args:
         subagents: 字典映射，如 {"researcher": researcher_agent, "editor": editor_agent, "analyst": analyst_agent}
+        default_timeout: 单个子 Agent 执行的绝对超时时间（秒），默认 90 秒熔断防卡死。
     """
     
     @tool
@@ -23,8 +24,16 @@ def create_subagent_tools(subagents: Dict[str, Any]):
         if not agent:
             return f"错误：未知的子 Agent 类型 '{subagent_type}'"
         
-        res = await agent.ainvoke({"messages": [HumanMessage(content=query)]})
-        return res["messages"][-1].content
+        try:
+            res = await asyncio.wait_for(
+                agent.ainvoke({"messages": [HumanMessage(content=query)]}),
+                timeout=default_timeout
+            )
+            return res["messages"][-1].content
+        except asyncio.TimeoutError:
+            return f"【错误】：子 Agent '{subagent_type}' 执行超时（超过 {default_timeout}s），已被系统强行熔断以保障安全。"
+        except Exception as e:
+            return f"【错误】：子 Agent '{subagent_type}' 运行异常: {str(e)}"
 
     @tool
     async def delegate_tasks_parallel(tasks: List[dict]) -> str:
@@ -44,10 +53,19 @@ def create_subagent_tools(subagents: Dict[str, Any]):
             if not agent:
                 return f"错误：未知的子 Agent 类型 '{stype}'"
             
-            res = await agent.ainvoke({"messages": [HumanMessage(content=query)]})
-            return f"【子任务完成 ({query})】:\n" + res["messages"][-1].content
+            try:
+                res = await asyncio.wait_for(
+                    agent.ainvoke({"messages": [HumanMessage(content=query)]}),
+                    timeout=default_timeout
+                )
+                return f"【子任务完成 ({query})】:\n" + res["messages"][-1].content
+            except asyncio.TimeoutError:
+                return f"【子任务超时 ({query})】:\n子 Agent '{stype}' 执行超过 {default_timeout}s，已被强行熔断。"
+            except Exception as e:
+                return f"【子任务异常 ({query})】:\n{str(e)}"
 
         results = await asyncio.gather(*[_run_single(t) for t in tasks])
         return "\n\n".join(results)
 
     return [delegate_task, delegate_tasks_parallel]
+
