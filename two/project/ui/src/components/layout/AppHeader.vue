@@ -5,9 +5,14 @@ import { useChatStore } from '../../stores/chatStore'
 const { theme, toggleTheme } = useTheme()
 const chatStore = useChatStore()
 
+defineProps<{
+  currentMode?: 'chat' | 'research'
+}>()
+
 defineEmits<{
   newChat: []
   toggleSidebar: []
+  switchMode: [mode: 'chat' | 'research']
 }>()
 </script>
 
@@ -39,11 +44,23 @@ defineEmits<{
       </button>
     </div>
 
-    <!-- Center: brand -->
+    <!-- Center: mode tabs -->
     <div class="app-header__center">
-      <div class="app-header__brand">
-        <span class="app-header__brand-dot" aria-hidden="true" />
-        <span class="app-header__brand-name">AI Chat</span>
+      <div class="mode-tabs">
+        <button
+          class="mode-btn"
+          :class="{ active: (currentMode || 'chat') === 'chat' }"
+          @click="$emit('switchMode', 'chat')"
+        >
+          💬 对话聊天
+        </button>
+        <button
+          class="mode-btn"
+          :class="{ active: currentMode === 'research' }"
+          @click="$emit('switchMode', 'research')"
+        >
+          🔬 深度调研 (Agent)
+        </button>
       </div>
     </div>
 
@@ -148,6 +165,33 @@ defineEmits<{
     flex: 1;
     display: flex;
     justify-content: center;
+
+    .mode-tabs {
+      display: flex;
+      background: var(--color-bg-muted, #f1f5f9);
+      padding: 3px;
+      border-radius: var(--radius-md, 8px);
+      gap: 4px;
+
+      .mode-btn {
+        padding: 5px 14px;
+        border: none;
+        background: none;
+        border-radius: 6px;
+        font-size: var(--text-xs, 12px);
+        font-weight: 500;
+        color: var(--color-text-secondary, #64748b);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &.active {
+          background: var(--color-bg-overlay, #ffffff);
+          color: var(--color-primary, #2563eb);
+          font-weight: 600;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+      }
+    }
   }
 
   &__brand {

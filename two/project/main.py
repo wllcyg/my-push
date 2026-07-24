@@ -26,6 +26,7 @@ from modules.ai.ai_controller import router as ai_router
 from modules.user.user_controller import router as user_router
 # 引入最新的用于适配 Vercel SDK 的聊天路由
 from modules.chat.chat_controller import chat_router
+from modules.agent_streamer.router import router as agent_stream_router
 
 from modules.config.settings import get_settings
 from modules.elasticsearch.es_service import es_service
@@ -36,20 +37,29 @@ async def lifespan(app: FastAPI):
     print_routes(app.routes)
     print("================================\n")
     
-    # 启动定时任务调度器
-    global_scheduler.start()
-    await job_service_instance.init_jobs()
-    print("====== ⏰ 定时任务调度器已启动 ======\n")
+    # 启动定时任务调度器（增加数据库容错保护，防止 MySQL 连线超时导致服务直接崩溃退出）
+    try:
+        global_scheduler.start()
+        await job_service_instance.init_jobs()
+        print("====== ⏰ 定时任务调度器已启动 ======\n")
+    except Exception as e:
+        print(f"⚠️ [数据库/Job 警告] 初始化跳过/失败 (不影响 Agent 与其他独立 API): {e}\n")
     
     # 初始化 Elasticsearch 连接
     settings = get_settings()
     if settings.es_host:
-        await es_service.connect(settings.es_host)
+        try:
+            await es_service.connect(settings.es_host)
+        except Exception as e:
+            print(f"⚠️ [ES 警告] 连接初始化失败: {e}\n")
 
     yield
 
     # 关闭 Elasticsearch 连接
-    await es_service.close()
+    try:
+        await es_service.close()
+    except Exception:
+        pass
 
 app = FastAPI(title="Project API with FastAPI", lifespan=lifespan)
 
@@ -67,6 +77,7 @@ app.add_middleware(
 app.include_router(ai_router)
 app.include_router(user_router)
 app.include_router(chat_router)
+app.include_router(agent_stream_router)
 
 # 注册全局异常拦截
 @app.exception_handler(APIException)

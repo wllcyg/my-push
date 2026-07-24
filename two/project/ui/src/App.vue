@@ -5,12 +5,16 @@ import AppHeader from './components/layout/AppHeader.vue'
 import AppSidebar from './components/layout/AppSidebar.vue'
 import ChatWindow from './components/chat/ChatWindow.vue'
 import ChatInput from './components/input/ChatInput.vue'
+import DeepResearchViewer from './components/agent/DeepResearchViewer.vue'
 import { useChat } from './hooks/useChat'
 import { useChatStore } from './stores/chatStore'
 import { useTheme } from './hooks/useTheme'
 
-// ── Initialize theme (applies data-theme to <html>) ────────
+// ── Initialize theme ─────────────────────────────────────────
 useTheme()
+
+// ── Mode Switch ──────────────────────────────────────────────
+const activeMode = ref<'chat' | 'research'>('research')
 
 // ── Chat hook ───────────────────────────────────────────────
 const { messages, input, loading, send, stop, clear } = useChat({
@@ -44,6 +48,10 @@ function handleToggleSidebar(): void {
 function handleSelectConversation(id: string): void {
   chatStore.setActive(id)
 }
+
+function handleSwitchMode(mode: 'chat' | 'research'): void {
+  activeMode.value = mode
+}
 </script>
 
 <template>
@@ -59,23 +67,30 @@ function handleSelectConversation(id: string): void {
     <!-- Header -->
     <template #header>
       <AppHeader
+        :current-mode="activeMode"
         @new-chat="handleNewChat"
         @toggle-sidebar="handleToggleSidebar"
+        @switch-mode="handleSwitchMode"
       />
     </template>
 
-    <!-- Chat area -->
+    <!-- Content area: conditionally render Chat or Deep Research -->
     <template #content>
+      <!-- Deep Research Agent Viewer -->
+      <DeepResearchViewer v-if="activeMode === 'research'" />
+
+      <!-- Normal Chat Window -->
       <ChatWindow
+        v-else
         :messages="messages"
         :is-loading="loading"
         @new-chat="handleNewChat"
       />
     </template>
 
-    <!-- Input area -->
+    <!-- Input area (Only visible in normal chat mode) -->
     <template #footer>
-      <div class="app-input-area">
+      <div v-if="activeMode === 'chat'" class="app-input-area">
         <ChatInput
           ref="chatInputRef"
           v-model="input"
