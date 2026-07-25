@@ -1,12 +1,11 @@
+from typing import Optional, Dict, Any
+from sqlalchemy.ext.asyncio import AsyncSession
+from langgraph.prebuilt import create_react_agent
 from modules.core.llm import default_model
 from modules.config.settings import get_settings
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from pydantic import BaseModel
-from modules.ai.agent_runner import run_agent_loop, run_agent_loop_stream, run_agent_loop_async
-from langchain_core.messages import HumanMessage
-from langchain_core.prompts import ChatPromptTemplate
 from modules.ai.tools import ALL_TOOLS
+from modules.ai.session_service import SessionService
+from langchain_core.messages import HumanMessage
 
 AGENT_SYSTEM_PROMPT = """你是一个专业、高效且可靠的 AI 助手。你的核心任务是理解用户意图，并在必要时精准调用工具来解决问题。
 
@@ -37,109 +36,158 @@ ADMIN_SYSTEM_PROMPT = """你是一个权限管理员助手。
 class AiService:
     """
     Service 层：只负责核心业务逻辑。
+    使用 LangGraph 内置的 create_react_agent 结合 SessionService 实现持久化与滑动窗口上下文。
     """
     def __init__(self):
         self.tools = ALL_TOOLS
-        self.model_with_tools = default_model.bind_tools(self.tools)
+        self.model = default_model
+        
+        # 使用 LangGraph 内置的 create_react_agent 封装通用 AI Agent 实例
+        self.agent = create_react_agent(
+            model=self.model,
+            tools=self.tools,
+            prompt=AGENT_SYSTEM_PROMPT
+        )
+        
+        # 封装管理员权限 Agent 实例
+        self.admin_agent = create_react_agent(
+            model=self.model,
+            tools=self.tools,
+            prompt=ADMIN_SYSTEM_PROMPT
+        )
 
     def generate_reply(self, prompt: str) -> dict:
         settings = get_settings()
         app_name = settings.app_name
 
-        # 构造提示词模板。给大模型设定人设，告诉它如果有特定诉求就要调用对应的工具
-        prompt_template = ChatPromptTemplate.from_messages([
-            ("system", AGENT_SYSTEM_PROMPT),
-            ("human", "{user_question}")
-        ])
-        messages = prompt_template.invoke({"user_question": prompt}).to_messages()
-
-        # 丢进咱们封装好的 agent runner 里，它会自动处理大模型到工具的循环调用
-        final_response = run_agent_loop(
-            model_with_tools=self.model_with_tools,
-            tools=self.tools,
-            messages=messages
-        )
+        result = self.agent.invoke({"messages": [("human", prompt)]})
+        final_message = result["messages"][-1]
 
         return {
             "status": "success",
             "app_name": app_name,
             "prompt": prompt,
-            "reply": final_response.content
+            "reply": final_message.content
         }
 
-    async def generate_reply_async(self, prompt: str) -> dict:
+    async def generate_reply_async(
+        self, 
+        prompt: str, 
+        user_id: int = 1, 
+        session_id: Optional[str] = None,
+        db: Optional[AsyncSession] = None
+    ) -> dict:
         settings = get_settings()
         app_name = settings.app_name
 
-        prompt_template = ChatPromptTemplate.from_messages([
-            ("system", AGENT_SYSTEM_PROMPT),
-            ("human", "{user_question}")
-        ])
-        messages = prompt_template.invoke({"user_question": prompt}).to_messages()
+        current_session_id = session_id
 
-        final_response = await run_agent_loop_async(
-            model_with_tools=self.model_with_tools,
-            tools=self.tools,
-            messages=messages
-        )
+        # 如果传入了 DB Session，开启完整的会话持久化与滑动窗口历史加载
+        if db:
+            session_svc = SessionService(db)
+            session = await session_svc.get_or_create_session(session_id, user_id, app_name)
+            current_session_id = session.id
+
+            # 1. 持久化保存 User 消息
+            await session_svc.save_message(current_session_id, "user", prompt)
+
+            # 2. 读取包含当前消息的滑动窗口历史 (近 20 条)
+            messages = await session_svc.get_history_messages(current_session_id, limit=20)
+            
+            # 3. 自动更新首句短标题
+            await session_svc.update_session_title_if_needed(current_session_id, prompt)
+        else:
+            messages = [HumanMessage(content=prompt)]
+
+        # 4. Agent 执行多轮上下文
+        result = await self.agent.ainvoke({"messages": messages})
+        final_message = result["messages"][-1]
+
+        # 5. 持久化保存 Assistant 回复
+        if db and current_session_id:
+            await session_svc.save_message(current_session_id, "assistant", final_message.content)
 
         return {
             "status": "success",
             "app_name": app_name,
+            "session_id": current_session_id,
             "prompt": prompt,
-            "reply": final_response.content
+            "reply": final_message.content
         }
 
-    async def generate_reply_stream(self, prompt: str):
+    async def generate_reply_stream(
+        self, 
+        prompt: str, 
+        user_id: int = 1, 
+        session_id: Optional[str] = None
+    ):
         """
-        流式输出业务逻辑：使用封装好的 run_agent_loop_stream 支持工具调用
+        流式输出业务逻辑：基于 LangGraph astream 机制，独立管理 DB 链接生命周期以支持 SSE 流式
         """
-        prompt_template = ChatPromptTemplate.from_messages([
-            ("system", AGENT_SYSTEM_PROMPT),
-            ("human", "{user_question}")
-        ])
-        messages = prompt_template.invoke({"user_question": prompt}).to_messages()
-        
-        return run_agent_loop_stream(
-            model_with_tools=self.model_with_tools,
-            tools=self.tools,
-            messages=messages
-        )
+        from modules.core.database import AsyncSessionFactory
+
+        current_session_id = session_id
+
+        # 1. 提问开始前：使用独立 DB 会话落盘 User 消息与获取滑动窗口历史
+        async with AsyncSessionFactory() as db:
+            session_svc = SessionService(db)
+            session = await session_svc.get_or_create_session(session_id, user_id)
+            current_session_id = session.id
+
+            await session_svc.save_message(current_session_id, "user", prompt)
+            messages = await session_svc.get_history_messages(current_session_id, limit=20)
+            await session_svc.update_session_title_if_needed(current_session_id, prompt)
+            await db.commit()
+
+        async def stream_generator():
+            full_reply = []
+            agent_stream = self.agent.astream(
+                {"messages": messages},
+                stream_mode="messages"
+            )
+            async for chunk, metadata in agent_stream:
+                if metadata.get("langgraph_node") == "agent":
+                    if chunk.content and isinstance(chunk.content, str):
+                        full_reply.append(chunk.content)
+                        yield chunk.content
+
+            # 2. 流输出结束：再次使用独立 DB 会话落盘 Assistant 回复
+            if current_session_id and full_reply:
+                complete_text = "".join(full_reply)
+                async with AsyncSessionFactory() as db:
+                    session_svc = SessionService(db)
+                    await session_svc.save_message(current_session_id, "assistant", complete_text)
+                    await db.commit()
+
+        return stream_generator(), current_session_id
+
 
     def get_user(self, user_id: str) -> dict:
-        # 使用 ChatPromptTemplate 进行标准的模板管理
-        prompt_template = ChatPromptTemplate.from_messages([
-            ("system", ADMIN_SYSTEM_PROMPT),
-            ("human", "请你帮我查询用户 ID 为 {user_id} 的信息，并告诉我该用户的角色。")
-        ])
+        user_prompt = f"请你帮我查询用户 ID 为 {user_id} 的信息，并告诉我该用户的角色。"
+        result = self.admin_agent.invoke({"messages": [("human", user_prompt)]})
+        final_message = result["messages"][-1]
         
-        # 把动态参数传给模板，并将其转换为消息数组 (List[BaseMessage])
-        messages = prompt_template.invoke({"user_id": user_id}).to_messages()
-        
-        final_response = run_agent_loop(
-            model_with_tools=self.model_with_tools,
-            tools=self.tools,
-            messages=messages
-        )
-        
-        # 5. 此时 final_response.content 就是大模型在拿到工具数据后，最终组织好的人话
         return {
             "status": "success",
             "user_id": user_id,
-            "content": final_response.content
+            "content": final_message.content
         }
 
     async def get_user_stream(self, user_id: str):
-        # 准备 Prompt
-        prompt_template = ChatPromptTemplate.from_messages([
-            ("system", ADMIN_SYSTEM_PROMPT),
-            ("human", "请你帮我查询用户 ID 为 {user_id} 的信息，并告诉我该用户的角色。")
-        ])
-        messages = prompt_template.invoke({"user_id": user_id}).to_messages()
+        """
+        流式查询用户信息：使用 admin_agent 的 astream 推送打字机流
+        """
+        user_prompt = f"请你帮我查询用户 ID 为 {user_id} 的信息，并告诉我该用户的角色。"
         
-        # 调用流式的 agent runner
-        return run_agent_loop_stream(
-            model_with_tools=self.model_with_tools,
-            tools=self.tools,
-            messages=messages
-        )
+        async def stream_generator():
+            agent_stream = self.admin_agent.astream(
+                {"messages": [("human", user_prompt)]},
+                stream_mode="messages"
+            )
+            async for chunk, metadata in agent_stream:
+                if metadata.get("langgraph_node") == "agent":
+                    if chunk.content and isinstance(chunk.content, str):
+                        yield chunk.content
+
+        return stream_generator()
+

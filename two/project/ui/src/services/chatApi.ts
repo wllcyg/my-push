@@ -1,6 +1,5 @@
 // ============================================================
-// Chat API Service — raw fetch wrapper
-// Returns the raw Response so callers control streaming.
+// Chat API Service — raw fetch wrapper & session history APIs
 // ============================================================
 
 import type { ChatRequest } from '../types/chat'
@@ -13,10 +12,30 @@ export interface ChatApiOptions {
 }
 
 /**
+ * 获取指定用户的历史会话列表
+ */
+export async function fetchUserSessions(userId: number = 1) {
+  const response = await fetch(`/api/ai/sessions?user_id=${userId}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch sessions: ${response.statusText}`)
+  }
+  return await response.json()
+}
+
+
+/**
+ * 获取某个会话的全量历史消息
+ */
+export async function fetchSessionMessages(sessionId: string) {
+  const response = await fetch(`/api/ai/sessions/${encodeURIComponent(sessionId)}/messages`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch session messages: ${response.statusText}`)
+  }
+  return await response.json()
+}
+
+/**
  * Sends a chat request to the backend and returns the raw Response.
- * The caller is responsible for reading the response body as a stream.
- *
- * @throws {Error} When the HTTP status is not OK
  */
 export async function sendChatRequest(
   request: ChatRequest,
@@ -43,3 +62,4 @@ export async function sendChatRequest(
 
   return response
 }
+

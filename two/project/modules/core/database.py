@@ -4,18 +4,20 @@ from modules.config.settings import get_settings
 
 _settings = get_settings()
 
-# 导出给 alembic/env.py 使用
-_db_url = (
-    f"mysql+asyncmy://{_settings.db_username}:{_settings.db_password}"
-    f"@{_settings.db_host}:{_settings.db_port}/{_settings.db_database}"
-)
+# 优先读取 database_url (如 Supabase PostgreSQL)，未配置时降级使用 MySQL
+if _settings.database_url:
+    _db_url = _settings.database_url
+    _connect_args = {}
+else:
+    _db_url = (
+        f"mysql+asyncmy://{_settings.db_username}:{_settings.db_password}"
+        f"@{_settings.db_host}:{_settings.db_port}/{_settings.db_database}"
+    )
+    _connect_args = {"ssl": {"ssl_disabled": False}}
 
 engine = create_async_engine(
     _db_url,
-    connect_args={
-        # asyncmy 在 Windows 上通过 dict 方式接收 SSL 参数
-        "ssl": {"ssl_disabled": False}
-    },
+    connect_args=_connect_args,
     pool_size=5,
     max_overflow=10,
     pool_recycle=300,

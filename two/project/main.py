@@ -27,6 +27,8 @@ from modules.user.user_controller import router as user_router
 # 引入最新的用于适配 Vercel SDK 的聊天路由
 from modules.chat.chat_controller import chat_router
 from modules.agent_streamer.router import router as agent_stream_router
+# 引入认证模块路由
+from modules.auth.auth_controller import router as auth_router
 
 from modules.config.settings import get_settings
 from modules.elasticsearch.es_service import es_service
@@ -78,6 +80,7 @@ app.include_router(ai_router)
 app.include_router(user_router)
 app.include_router(chat_router)
 app.include_router(agent_stream_router)
+app.include_router(auth_router)
 
 # 注册全局异常拦截
 @app.exception_handler(APIException)

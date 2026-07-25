@@ -34,6 +34,13 @@ class User(Base):
         comment="用户邮箱"
     )
 
+    # 密码哈希
+    password_hash: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        comment="密码哈希"
+    )
+
     # 对应 @CreateDateColumn({ type: 'timestamp' })
     # 使用 Python 端默认值（insert_default），兼容没有 server DEFAULT 的数据库列
     created_at: Mapped[datetime] = mapped_column(

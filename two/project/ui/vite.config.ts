@@ -20,6 +20,11 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      '/api/ai': {
+        target: 'http://localhost:8521/ai',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ai/, ''),
+      },
       '/api/chat': {
         target: 'http://localhost:8521/ai/chat',
         changeOrigin: true,
@@ -32,3 +37,4 @@ export default defineConfig({
     },
   },
 })
+

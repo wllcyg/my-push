@@ -22,7 +22,6 @@ const selectedReportName = ref<string>('')
 const activeTab = ref<'flow' | 'log'>('flow')
 
 const logContainerRef = ref<HTMLElement | null>(null)
-const reportContainerRef = ref<HTMLElement | null>(null)
 
 const apiBase = import.meta.env.VITE_API_BASE || ''
 
