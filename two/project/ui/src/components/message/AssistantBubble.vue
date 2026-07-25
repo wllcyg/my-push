@@ -19,23 +19,7 @@ const isThinking = computed(
   <div class="assistant-bubble">
     <!-- Avatar -->
     <div class="assistant-bubble__avatar" aria-hidden="true">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5Z" />
-        <path d="M17 11v1a5 5 0 0 1-10 0v-1" />
-        <circle cx="9" cy="18" r="1" />
-        <circle cx="15" cy="18" r="1" />
-        <path d="M12 19v3" />
-      </svg>
+      <img src="/avatars/ai-avatar.png" alt="AI Avatar" class="avatar-img" />
     </div>
 
     <!-- Content area -->
@@ -85,16 +69,21 @@ const isThinking = computed(
 
   &__avatar {
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-primary-gradient-from), var(--color-primary-gradient-to));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     margin-top: 2px;
+    border: 1.5px solid var(--color-border-subtle, rgba(255, 255, 255, 0.15));
+
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.05);
+      display: block;
+    }
   }
 
   &__main {

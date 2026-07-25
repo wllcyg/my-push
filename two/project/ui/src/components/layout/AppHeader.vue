@@ -174,7 +174,9 @@ defineEmits<{
 
         <div v-else class="user-menu-wrapper">
           <button class="user-badge-btn" @click="showUserMenu = !showUserMenu">
-            <span class="user-avatar">{{ authStore.user?.name.slice(0, 1).toUpperCase() }}</span>
+            <span class="user-avatar">
+              <img src="/avatars/user-avatar.png" alt="User Avatar" class="header-avatar-img" />
+            </span>
             <span class="user-name">{{ authStore.user?.name }}</span>
           </button>
 
@@ -370,13 +372,17 @@ defineEmits<{
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: #ffffff;
-    font-size: 12px;
-    font-weight: 600;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+
+    .header-avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.18);
+    }
   }
 
   .user-name {

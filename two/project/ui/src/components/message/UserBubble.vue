@@ -9,25 +9,57 @@ defineProps<{
 
 <template>
   <div class="user-bubble">
-    <div class="user-bubble__content">
-      <p class="user-bubble__text">{{ message.content }}</p>
+    <div class="user-bubble__main">
+      <div class="user-bubble__content">
+        <p class="user-bubble__text">{{ message.content }}</p>
+      </div>
+      <MessageTimestamp
+        class="user-bubble__time"
+        :timestamp="message.createdAt"
+      />
     </div>
-    <MessageTimestamp
-      class="user-bubble__time"
-      :timestamp="message.createdAt"
-    />
+    <div class="user-bubble__avatar">
+      <img src="/avatars/user-avatar.png" alt="User Avatar" class="avatar-img" />
+    </div>
   </div>
 </template>
 
 <style scoped lang="scss">
 .user-bubble {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  max-width: 72%;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 10px;
+  max-width: 80%;
   margin-left: auto;
   animation: slideInRight var(--duration-slow) var(--ease-out) both;
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    margin-top: 2px;
+    border: 1.5px solid var(--color-border-subtle, rgba(255, 255, 255, 0.15));
+
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.18);
+      display: block;
+    }
+  }
 
   &__content {
     background: var(--color-bg-user-bubble);

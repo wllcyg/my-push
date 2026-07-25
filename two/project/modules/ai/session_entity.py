@@ -4,6 +4,7 @@ from typing import Optional, List
 from sqlalchemy import String, Text, DateTime, ForeignKey, Boolean, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from modules.core.database import Base
+from modules.user.user_entity import User  # noqa: F401
 
 def generate_uuid() -> str:
     return str(uuid.uuid4())

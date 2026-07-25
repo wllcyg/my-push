@@ -2,7 +2,7 @@ import sys
 import os
 import json
 import asyncio
-from typing import List
+from typing import List, Optional, Dict, Any
 
 # 将项目根目录加入 Python 模块搜索路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -28,21 +28,34 @@ class RedisMessageStore:
     负责 LangChain / DeepAgents 消息对象的 JSON 序列化、反序列化及 TTL 控制
     """
 
-    def __init__(self, redis_service: EnterpriseRedisService, module_name: str = "short_memory", ttl_seconds: int = 1800):
-        self.redis_service = redis_service
+    def __init__(
+        self, 
+        redis_service: Optional[EnterpriseRedisService] = None, 
+        module_name: str = "short_memory", 
+        ttl_seconds: int = 1800
+    ):
+        if redis_service is None:
+            from redis.service import redis_service as default_redis
+            self.redis_service = default_redis
+        else:
+            self.redis_service = redis_service
         self.module_name = module_name
         self.ttl_seconds = ttl_seconds
         # 内存降级字典（当本地未配置 Redis 连接凭证时保底可用）
         self._memory_fallback = {}
 
-    def load_messages(self, session_id: str) -> List[BaseMessage]:
-        """从 Redis 读取并反序列化 LangChain 消息列表"""
+    def load_messages(self, session_id: str) -> Optional[List[BaseMessage]]:
+        """从 Redis 读取并反序列化 LangChain 消息列表。返回 None 表示 Cache Miss，返回 [] 表示空列表。"""
         dict_list = self.redis_service.get_json(self.module_name, session_id)
         if dict_list is None:
             dict_list = self._memory_fallback.get(session_id)
 
+        if dict_list is None:
+            return None
+
         if not dict_list:
             return []
+
         try:
             return messages_from_dict(dict_list)
         except Exception as e:
