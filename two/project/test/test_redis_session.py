@@ -27,15 +27,18 @@ async def run_tests():
 
         # 1. 验证获取/新建会话
         session = await session_svc.get_or_create_session(test_session_id, user_id)
+        await db.commit()
         assert session is not None, "❌ 获取/创建 Session 失败"
         print(f"✅ 1. 成功创建测试 Session: id={session.id}")
 
         # 2. 模拟第 1 轮对话落盘 (User 发送消息)
         user_msg = await session_svc.save_message(session.id, "user", "你好，我是测试用户！")
+        await db.commit()
         print(f"✅ 2. 用户消息已落盘 DB 并同步回写 Redis: '{user_msg.content}'")
 
         # 3. 模拟第 1 轮 AI 回复落盘
         ai_msg = await session_svc.save_message(session.id, "assistant", "你好！很高兴为你服务。")
+        await db.commit()
         print(f"✅ 3. AI 消息已落盘 DB 并同步回写 Redis: '{ai_msg.content}'")
 
         # 4. 测试缓存读取 - 首次从 Redis 命中 (Cache HIT)
