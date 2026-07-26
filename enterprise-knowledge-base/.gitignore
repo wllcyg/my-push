@@ -1,0 +1,22 @@
+# 编译与打包
+/dist
+/node_modules
+
+# 环境配置密钥（切勿提交公网）
+.env
+.env.production
+.env.local
+
+# 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# 测试
+/coverage
+
+# IDE & OS
+.DS_Store
+.vscode/
+.idea/
