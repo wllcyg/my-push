@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from .session_entity import ChatSession, ChatMessage
-from redis.agent_memory import RedisMessageStore
+from redis_service_module.agent_memory import RedisMessageStore
 
 class SessionService:
     """

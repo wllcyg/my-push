@@ -37,6 +37,21 @@ class Settings(BaseSettings):
 
     web_search_key: str | None = None
 
+    # --- Supabase 存储配置 ---
+    supabase_url: str | None = None
+    supabase_key: str | None = None
+    supabase_storage_bucket: str = "research-reports"
+
+    # --- Axiom 云端日志服务配置 ---
+    axiom_token: str | None = None
+    axiom_dataset: str = "my-push-backend"
+
+    # --- Langfuse LLM 可观测性平台配置 ---
+    langfuse_public_key: str | None = None
+    langfuse_secret_key: str | None = None
+    langfuse_host: str = "https://cloud.langfuse.com"
+    langfuse_base_url: str = "https://cloud.langfuse.com"
+
     # --- 邮件配置 ---
     smtp_server: str = "smtp.qq.com"
     smtp_port: int = 465

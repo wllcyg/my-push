@@ -7,7 +7,7 @@ root_dir = Path(__file__).resolve().parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
-from redis.service import redis_service
+from redis_service_module.service import redis_service
 
 
 # 模拟真实数据库查询函数 (Expensive DB Query)

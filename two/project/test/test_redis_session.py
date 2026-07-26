@@ -12,7 +12,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from modules.core.database import AsyncSessionFactory
 from modules.ai.session_service import SessionService
-from redis.agent_memory import RedisMessageStore
+from redis_service_module.agent_memory import RedisMessageStore
 
 async def run_tests():
     print("=" * 60)

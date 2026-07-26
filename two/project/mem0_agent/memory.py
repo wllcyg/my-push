@@ -40,13 +40,13 @@ from langchain_core.messages import (
 try:
     from deep_agents.core.react_agent import create_agent
     from mem0_agent.service import memory_service        # ← 项目封装的 Mem0 服务单例
-    from redis.service import redis_service              # ← 项目 Upstash Redis 单例
+    from redis_service_module.service import redis_service # ← 项目 Upstash Redis 单例
 except ImportError:
     # 兼容直接单文件运行（python mem0_agent/memory.py）
     sys.path.append(str(Path(__file__).resolve().parent.parent))
     from deep_agents.core.react_agent import create_agent
     from mem0_agent.service import memory_service
-    from redis.service import redis_service
+    from redis_service_module.service import redis_service
 
 # ── 加载环境变量 ─────────────────────────────────────────────────────────────
 env_path = Path(__file__).resolve().parent.parent / ".env"

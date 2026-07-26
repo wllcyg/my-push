@@ -10,6 +10,7 @@ from modules.config.settings import get_settings
 from modules.core.rerank import DashScopeRerank
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
+from redis_service_module.rag_cache import rag_cache
 
 class HybridRetrievalState(TypedDict, total=False):
     query: str
@@ -19,6 +20,8 @@ class HybridRetrievalState(TypedDict, total=False):
     merged: List[Dict[str, Any]]
     topDocuments: List[Dict[str, Any]]
     answer: str
+    # 检索结果缓存命中标记：True 表示已命中 [6] 缓存，可跳过整个检索链路
+    retrieval_cache_hit: bool
 
 INDEX = "life_notes"
 
@@ -26,19 +29,39 @@ async def query_agent(state: HybridRetrievalState) -> HybridRetrievalState:
     """
     第一站：查询扩写节点
     将用户原始 query 发送给大模型，生成多个角度的变体，存入 queryAugmentation。
+    [4] 优先读取 Redis 改写结果缓存，命中直接返回，跳过 LLM 调用。
+    [6] 同时检查检索结果缓存，命中则设置标记，后续节点直接跳过检索链路。
     """
     original_query = state.get("query", "")
-    
-    # 调用大模型执行扩写
-    augmentation = await augment_query(default_model, original_query)
-    
+
+    # ── [6] 检索结果缓存检查（在改写之前就检查，命中则整个检索链路都可以跳过）──
+    cached_docs = rag_cache.get_retrieval(original_query, INDEX)
+    if cached_docs is not None:
+        print(f"⚡ [Query Agent] 检索结果缓存命中，跳过 ES+Milvus+Rerank 全链路")
+        return {
+            "queryAugmentation": {},
+            "topDocuments": cached_docs,
+            "retrieval_cache_hit": True
+        }
+
+    # ── [4] Query 改写结果缓存检查 ──
+    cached_aug = rag_cache.get_augmentation(original_query)
+    if cached_aug is not None:
+        augmentation = cached_aug
+        print(f"⚡ [Query Agent] 改写缓存命中，跳过 LLM 调用")
+    else:
+        # 缓存未命中，调用大模型执行扩写
+        augmentation = await augment_query(default_model, original_query)
+        # 写入改写缓存
+        rag_cache.set_augmentation(original_query, augmentation)
+
     # 打印测试（展示生成的用于召回的语句）
     search_queries = retrieval_query_strings(original_query, augmentation)
     print(f"\n[Query Agent] 原始问题: {original_query}")
     print(f"[Query Agent] 多路召回触发词: {search_queries}")
-    
+
     # 将扩写结果塞回状态盒子里，传给下一个节点
-    return {"queryAugmentation": augmentation}
+    return {"queryAugmentation": augmentation, "retrieval_cache_hit": False}
 
 async def es_recall_agent(state: HybridRetrievalState) -> HybridRetrievalState:
     """
@@ -189,13 +212,18 @@ async def rerank_agent(state: HybridRetrievalState) -> HybridRetrievalState:
     """
     第五站：重排 (Rerank)
     将合并后的文档列表交给已经封装好的重排器，提取最相关的 Top N。
+    重排完成后，将结果写入 [6] Redis 检索结果缓存，供后续相同 query 命中使用。
     """
     query = state.get("query", "")
     merged = state.get("merged", [])
-    
+
+    # 检索结果缓存已命中时，rerank_agent 不会被调用（由路由条件跳过），此处为双重保险
+    if state.get("retrieval_cache_hit"):
+        return {}
+
     if not merged:
         return {"topDocuments": []}
-        
+
     # 适配封装组件：将 Dict 转换为 LangChain Document
     docs_to_rerank = [
         Document(
@@ -204,22 +232,26 @@ async def rerank_agent(state: HybridRetrievalState) -> HybridRetrievalState:
         )
         for d in merged
     ]
-    
+
     # 异常捕获防止 API 报错中断流程
     try:
         compressed_docs = await reranker.acompress_documents(docs_to_rerank, query)
     except Exception as e:
         print(f"[Rerank] 重排器调用失败: {e}，回退至取前三")
         return {"topDocuments": merged[:3]}
-        
+
     # 再转回 Dict，保持 State 的一致性
     top_docs = []
     for doc in compressed_docs:
         item = dict(doc.metadata)
         item["doc_text"] = doc.page_content
         top_docs.append(item)
-        
+
     print(f"\n[Rerank Agent] 重排完毕，从 {len(merged)} 篇中优选出 Top {len(top_docs)} 篇")
+
+    # ── [6] 将 rerank 后的 topDocuments 写入 Redis 检索结果缓存 ──
+    rag_cache.set_retrieval(query, INDEX, top_docs)
+
     return {"topDocuments": top_docs}
 
 ANSWER_PROMPT = ChatPromptTemplate.from_messages([
@@ -281,9 +313,25 @@ workflow.add_node("rerank_agent", rerank_agent)
 workflow.add_node("generate_answer_agent", generate_answer_agent)
 
 # 2. 编排边（连线）
-# 扩写完成后，同时交给 ES 和 Milvus 执行 (并行化)
 workflow.add_edge(START, "query_agent")
-workflow.add_edge("query_agent", "es_recall_agent")
+
+# [6] 缓存路由：若 query_agent 检测到检索结果缓存命中，直接跳到生成节点；否则走完整检索链路
+def route_after_query(state: HybridRetrievalState) -> str:
+    if state.get("retrieval_cache_hit"):
+        print("⚡ [Router] 检索缓存命中，直接跳转到 generate_answer_agent")
+        return "generate_answer_agent"
+    return "es_recall_agent"
+
+workflow.add_conditional_edges(
+    "query_agent",
+    route_after_query,
+    {
+        "generate_answer_agent": "generate_answer_agent",
+        "es_recall_agent": "es_recall_agent",
+    }
+)
+
+# query_agent 走 es_recall 时，也要并行触发 milvus（保持原有并行结构）
 workflow.add_edge("query_agent", "milvus_recall_agent")
 
 # 两路召回全部执行完毕后，流入 merge_agent 进行去重

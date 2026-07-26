@@ -1,0 +1,949 @@
+2026-07-26 14:22:42.925 | INFO     | __main__:test_axiom:19 - 后端服务启动成功，系统就绪。
+2026-07-26 14:22:42.926 | WARNING  | __main__:test_axiom:20 - 这是一条模拟的 Warning 警报日志
+2026-07-26 14:22:42.927 | ERROR    | __main__:test_axiom:25 - 模拟后端的 Exception 崩溃日志已被 Loguru 捕获并推送到 Axiom
+Traceback (most recent call last):
+
+  File "D:\self\my-push\two\project\test\test_axiom_logger.py", line 30, in <module>
+    test_axiom()
+    └ <function test_axiom at 0x00000180E5E73E20>
+
+> File "D:\self\my-push\two\project\test\test_axiom_logger.py", line 23, in test_axiom
+    1 / 0
+
+ZeroDivisionError: division by zero
+2026-07-26 14:25:32.621 | INFO     | __main__:test_axiom:19 - 后端服务启动成功，系统就绪。
+2026-07-26 14:25:32.622 | WARNING  | __main__:test_axiom:20 - 这是一条模拟的 Warning 警报日志
+2026-07-26 14:25:32.625 | ERROR    | __main__:test_axiom:25 - 模拟后端的 Exception 崩溃日志已被 Loguru 捕获并推送到 Axiom
+Traceback (most recent call last):
+
+  File "D:\self\my-push\two\project\test\test_axiom_logger.py", line 32, in <module>
+    test_axiom()
+    └ <function test_axiom at 0x0000018A1B311B20>
+
+> File "D:\self\my-push\two\project\test\test_axiom_logger.py", line 23, in test_axiom
+    1 / 0
+
+ZeroDivisionError: division by zero
+2026-07-26 14:26:02.011 | INFO     | __main__:test_axiom:19 - 后端服务启动成功，系统就绪。
+2026-07-26 14:26:02.012 | WARNING  | __main__:test_axiom:20 - 这是一条模拟的 Warning 警报日志
+2026-07-26 14:26:02.014 | ERROR    | __main__:test_axiom:25 - 模拟后端的 Exception 崩溃日志已被 Loguru 捕获并推送到 Axiom
+Traceback (most recent call last):
+
+  File "D:\self\my-push\two\project\test\test_axiom_logger.py", line 32, in <module>
+    test_axiom()
+    └ <function test_axiom at 0x000001E443931B20>
+
+> File "D:\self\my-push\two\project\test\test_axiom_logger.py", line 23, in test_axiom
+    1 / 0
+
+ZeroDivisionError: division by zero
+2026-07-26 14:26:41.993 | INFO     | __main__:test_axiom:19 - 后端服务启动成功，系统就绪。
+2026-07-26 14:26:41.994 | WARNING  | __main__:test_axiom:20 - 这是一条模拟的 Warning 警报日志
+2026-07-26 14:26:41.995 | ERROR    | __main__:test_axiom:25 - 模拟后端的 Exception 崩溃日志已被 Loguru 捕获并推送到 Axiom
+Traceback (most recent call last):
+
+  File "D:\self\my-push\two\project\test\test_axiom_logger.py", line 42, in <module>
+    test_axiom()
+    └ <function test_axiom at 0x000002679CE33E20>
+
+> File "D:\self\my-push\two\project\test\test_axiom_logger.py", line 23, in test_axiom
+    1 / 0
+
+ZeroDivisionError: division by zero
+2026-07-26 14:27:04.736 | INFO     | __main__:test_axiom:19 - 后端服务启动成功，系统就绪。
+2026-07-26 14:27:04.741 | WARNING  | __main__:test_axiom:20 - 这是一条模拟的 Warning 警报日志
+2026-07-26 14:27:04.742 | ERROR    | __main__:test_axiom:25 - 模拟后端的 Exception 崩溃日志已被 Loguru 捕获并推送到 Axiom
+Traceback (most recent call last):
+
+  File "D:\self\my-push\two\project\test\test_axiom_logger.py", line 42, in <module>
+    test_axiom()
+    └ <function test_axiom at 0x000001730FA53E20>
+
+> File "D:\self\my-push\two\project\test\test_axiom_logger.py", line 23, in test_axiom
+    1 / 0
+
+ZeroDivisionError: division by zero
+2026-07-26 14:28:25.907 | INFO     | __main__:test_axiom:19 - 后端服务启动成功，系统就绪。
+2026-07-26 14:28:25.907 | WARNING  | __main__:test_axiom:20 - 这是一条模拟的 Warning 警报日志
+2026-07-26 14:28:25.908 | ERROR    | __main__:test_axiom:25 - 模拟后端的 Exception 崩溃日志已被 Loguru 捕获并推送到 Axiom
+Traceback (most recent call last):
+
+  File "D:\self\my-push\two\project\test\test_axiom_logger.py", line 42, in <module>
+    test_axiom()
+    └ <function test_axiom at 0x000001E3620D3E20>
+
+> File "D:\self\my-push\two\project\test\test_axiom_logger.py", line 23, in test_axiom
+    1 / 0
+
+ZeroDivisionError: division by zero
+2026-07-26 15:08:57.797 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 15:08:58.033 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /auth/me
+2026-07-26 15:08:59.164 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 1367.05ms
+2026-07-26 15:09:00.261 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions/c5f37b9b-0173-4b40-b0dc-ba14e9360ed6/messages
+2026-07-26 15:09:01.539 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions/c5f37b9b-0173-4b40-b0dc-ba14e9360ed6/messages | 状态码: 200 | 耗时: 1278.78ms
+2026-07-26 15:09:03.141 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /auth/me | 状态码: 200 | 耗时: 5108.27ms
+2026-07-26 15:09:30.408 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/chat/stream
+2026-07-26 15:09:49.210 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/chat/stream | 状态码: 200 | 耗时: 18802.31ms
+2026-07-26 15:14:16.610 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 15:14:17.527 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 917.33ms
+2026-07-26 15:20:17.461 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 15:20:17.476 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /auth/me
+2026-07-26 15:20:22.339 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /auth/me | 状态码: 200 | 耗时: 4863.66ms
+2026-07-26 15:20:23.104 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 5642.82ms
+2026-07-26 15:20:23.122 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions/c5f37b9b-0173-4b40-b0dc-ba14e9360ed6/messages
+2026-07-26 15:20:24.095 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions/c5f37b9b-0173-4b40-b0dc-ba14e9360ed6/messages | 状态码: 200 | 耗时: 973.1ms
+2026-07-26 15:20:37.615 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/chat/stream
+2026-07-26 15:20:55.552 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/chat/stream | 状态码: 200 | 耗时: 17936.76ms
+2026-07-26 15:26:14.603 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 15:26:15.174 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 571.41ms
+2026-07-26 15:52:48.632 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /auth/me
+2026-07-26 15:52:48.870 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 15:52:50.022 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /auth/me | 状态码: 200 | 耗时: 1389.7ms
+2026-07-26 15:52:52.320 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 3449.46ms
+2026-07-26 15:52:52.404 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions/b2c7e63d-7660-4041-9ad9-54e21c293dca/messages
+2026-07-26 15:52:53.537 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions/b2c7e63d-7660-4041-9ad9-54e21c293dca/messages | 状态码: 200 | 耗时: 1133.32ms
+2026-07-26 15:53:10.607 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/chat/stream
+2026-07-26 15:53:32.495 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/chat/stream | 状态码: 200 | 耗时: 21887.35ms
+2026-07-26 15:53:44.504 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 15:53:44.920 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 415.98ms
+2026-07-26 16:07:49.831 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/chat/stream
+2026-07-26 16:08:06.871 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/chat/stream | 状态码: 200 | 耗时: 17039.74ms
+2026-07-26 16:10:36.964 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 16:10:41.335 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 4371.05ms
+2026-07-26 16:21:50.754 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions/dc235719-7437-4341-8ec6-d0b8131dbad7/messages
+2026-07-26 16:21:51.536 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions/dc235719-7437-4341-8ec6-d0b8131dbad7/messages
+2026-07-26 16:21:55.273 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions/dc235719-7437-4341-8ec6-d0b8131dbad7/messages | 状态码: 200 | 耗时: 4519.69ms
+2026-07-26 16:21:56.750 | ERROR    | modules.core.middleware:dispatch:45 - ❌ [GET] /ai/sessions/dc235719-7437-4341-8ec6-d0b8131dbad7/messages 内部崩溃 | 耗时: 5213.72ms | 异常: unexpected connection_lost() call
+Traceback (most recent call last):
+
+  File "<string>", line 1, in <module>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\multiprocessing\spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               │     │   └ 700
+               │     └ 3
+               └ <function _main at 0x000001399A9EACA0>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\multiprocessing\spawn.py", line 135, in _main
+    return self._bootstrap(parent_sentinel)
+           │    │          └ 700
+           │    └ <function BaseProcess._bootstrap at 0x000001399A440180>
+           └ <SpawnProcess name='SpawnProcess-1' parent=36168 started>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\multiprocessing\process.py", line 313, in _bootstrap
+    self.run()
+    │    └ <function BaseProcess.run at 0x000001399A3C7920>
+    └ <SpawnProcess name='SpawnProcess-1' parent=36168 started>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+    │    │        │    │        │    └ {'config': <uvicorn.config.Config object at 0x000001399A416F90>, 'target': <bound method Server.run of <uvicorn.server.Server...
+    │    │        │    │        └ <SpawnProcess name='SpawnProcess-1' parent=36168 started>
+    │    │        │    └ ()
+    │    │        └ <SpawnProcess name='SpawnProcess-1' parent=36168 started>
+    │    └ <function subprocess_started at 0x000001399C05EF20>
+    └ <SpawnProcess name='SpawnProcess-1' parent=36168 started>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\uvicorn\_subprocess.py", line 80, in subprocess_started
+    target(sockets=sockets)
+    │              └ [<socket.socket fd=892, family=2, type=1, proto=6, laddr=('127.0.0.1', 8521)>]
+    └ <bound method Server.run of <uvicorn.server.Server object at 0x00000139A3C6B230>>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\uvicorn\server.py", line 74, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+           │           │    │             │                      │    │      └ <function Config.get_loop_factory at 0x000001399BF41DA0>
+           │           │    │             │                      │    └ <uvicorn.config.Config object at 0x000001399A416F90>
+           │           │    │             │                      └ <uvicorn.server.Server object at 0x00000139A3C6B230>
+           │           │    │             └ [<socket.socket fd=892, family=2, type=1, proto=6, laddr=('127.0.0.1', 8521)>]
+           │           │    └ <function Server.serve at 0x000001399C05DD00>
+           │           └ <uvicorn.server.Server object at 0x00000139A3C6B230>
+           └ <function run at 0x000001399AA439C0>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           │      │   └ <coroutine object Server.serve at 0x000001399A3AC3C0>
+           │      └ <function Runner.run at 0x000001399AC9ED40>
+           └ <asyncio.runners.Runner object at 0x00000139A3C6BB60>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           │    │     │                  └ <Task pending name='Task-1' coro=<Server.serve() running at D:\self\my-push\two\project\.venv\Lib\site-packages\uvicorn\serve...
+           │    │     └ <function BaseEventLoop.run_until_complete at 0x000001399AC9C680>
+           │    └ <_WindowsSelectorEventLoop running=True closed=False debug=False>
+           └ <asyncio.runners.Runner object at 0x00000139A3C6BB60>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\asyncio\base_events.py", line 712, in run_until_complete
+    self.run_forever()
+    │    └ <function BaseEventLoop.run_forever at 0x000001399AC9C5E0>
+    └ <_WindowsSelectorEventLoop running=True closed=False debug=False>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\asyncio\base_events.py", line 683, in run_forever
+    self._run_once()
+    │    └ <function BaseEventLoop._run_once at 0x000001399AC9E3E0>
+    └ <_WindowsSelectorEventLoop running=True closed=False debug=False>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\asyncio\base_events.py", line 2050, in _run_once
+    handle._run()
+    │      └ <function Handle._run at 0x000001399AC1F1A0>
+    └ <Handle Task.task_wakeup()>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    │    │            │    │           │    └ <member '_args' of 'Handle' objects>
+    │    │            │    │           └ <Handle Task.task_wakeup()>
+    │    │            │    └ <member '_callback' of 'Handle' objects>
+    │    │            └ <Handle Task.task_wakeup()>
+    │    └ <member '_context' of 'Handle' objects>
+    └ <Handle Task.task_wakeup()>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\uvicorn\protocols\http\h11_impl.py", line 416, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+                   └ <uvicorn.middleware.proxy_headers.ProxyHeadersMiddleware object at 0x000001399A386900>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+                 │    │   │      │        └ <bound method RequestResponseCycle.send of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139B450CE50>>
+                 │    │   │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139B450C...
+                 │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+                 │    └ <fastapi.applications.FastAPI object at 0x00000139A3C9ED50>
+                 └ <uvicorn.middleware.proxy_headers.ProxyHeadersMiddleware object at 0x000001399A386900>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\applications.py", line 1163, in __call__
+    await super().__call__(scope, receive, send)
+                           │      │        └ <bound method RequestResponseCycle.send of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139B450CE50>>
+                           │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139B450C...
+                           └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+          │    │                │      │        └ <bound method RequestResponseCycle.send of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139B450CE50>>
+          │    │                │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139B450C...
+          │    │                └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    └ <starlette.middleware.errors.ServerErrorMiddleware object at 0x00000139A3CB9400>
+          └ <fastapi.applications.FastAPI object at 0x00000139A3C9ED50>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+          │    │   │      │        └ <function ServerErrorMiddleware.__call__.<locals>._send at 0x00000139B4118F40>
+          │    │   │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139B450C...
+          │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    └ <starlette.middleware.cors.CORSMiddleware object at 0x00000139A3CB92B0>
+          └ <starlette.middleware.errors.ServerErrorMiddleware object at 0x00000139A3CB9400>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\middleware\cors.py", line 88, in __call__
+    await self.app(scope, receive, send)
+          │    │   │      │        └ <function ServerErrorMiddleware.__call__.<locals>._send at 0x00000139B4118F40>
+          │    │   │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139B450C...
+          │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    └ <modules.core.middleware.APILoggingMiddleware object at 0x00000139A3CB9160>
+          └ <starlette.middleware.cors.CORSMiddleware object at 0x00000139A3CB92B0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\middleware\base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+                     │    │             │        └ <function BaseHTTPMiddleware.__call__.<locals>.call_next at 0x00000139B41193A0>
+                     │    │             └ <starlette.middleware.base._CachedRequest object at 0x00000139B450D750>
+                     │    └ <bound method APILoggingMiddleware.dispatch of <modules.core.middleware.APILoggingMiddleware object at 0x00000139A3CB9160>>
+                     └ <modules.core.middleware.APILoggingMiddleware object at 0x00000139A3CB9160>
+
+> File "D:\self\my-push\two\project\modules\core\middleware.py", line 28, in dispatch
+    response: Response = await call_next(request)
+                               │         └ <starlette.middleware.base._CachedRequest object at 0x00000139B450D750>
+                               └ <function BaseHTTPMiddleware.__call__.<locals>.call_next at 0x00000139B41193A0>
+
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+          │            │       │            │       └ <attribute '__context__' of 'BaseException' objects>
+          │            │       │            └ ConnectionError('unexpected connection_lost() call')
+          │            │       └ <attribute '__cause__' of 'BaseException' objects>
+          │            └ ConnectionError('unexpected connection_lost() call')
+          └ ConnectionError('unexpected connection_lost() call')
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+          │    │   │      │                      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.send_no_error at 0x00000139A3E116C0>
+          │    │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E11940>
+          │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    └ <starlette.middleware.exceptions.ExceptionMiddleware object at 0x00000139A3CB9010>
+          └ <modules.core.middleware.APILoggingMiddleware object at 0x00000139A3CB9160>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+          │                            │    │    │     │      │        └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.send_no_error at 0x00000139A3E116C0>
+          │                            │    │    │     │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E11940>
+          │                            │    │    │     └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │                            │    │    └ <starlette.requests.Request object at 0x00000139B4180DD0>
+          │                            │    └ <fastapi.middleware.asyncexitstack.AsyncExitStackMiddleware object at 0x00000139A3CB8EC0>
+          │                            └ <starlette.middleware.exceptions.ExceptionMiddleware object at 0x00000139A3CB9010>
+          └ <function wrap_app_handling_exceptions at 0x000001399BDBB420>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+          │   │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139A3DD11C0>
+          │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E11940>
+          │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          └ <fastapi.middleware.asyncexitstack.AsyncExitStackMiddleware object at 0x00000139A3CB8EC0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+          │    │   │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139A3DD11C0>
+          │    │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E11940>
+          │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    └ <fastapi.routing.APIRouter object at 0x00000139A3C3ACF0>
+          └ <fastapi.middleware.asyncexitstack.AsyncExitStackMiddleware object at 0x00000139A3CB8EC0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+          │    │                │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139A3DD11C0>
+          │    │                │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E11940>
+          │    │                └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    └ <bound method APIRouter.app of <fastapi.routing.APIRouter object at 0x00000139A3C3ACF0>>
+          └ <fastapi.routing.APIRouter object at 0x00000139A3C3ACF0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 2672, in app
+    await route.handle(scope, receive, send)
+          │     │      │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139A3DD11C0>
+          │     │      │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E11940>
+          │     │      └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │     └ <function _IncludedRouter.handle at 0x000001399BE06020>
+          └ _IncludedRouter(original_router=<fastapi.routing.APIRouter object at 0x00000139A3122AD0>, include_context=_RouterIncludeConte...
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 1753, in handle
+    await self.original_router.handle(scope, receive, send)
+          │    │               │      │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139A3DD11C0>
+          │    │               │      │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E11940>
+          │    │               │      └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    │               └ <function APIRouter.handle at 0x000001399BE07EC0>
+          │    └ <fastapi.routing.APIRouter object at 0x00000139A3122AD0>
+          └ _IncludedRouter(original_router=<fastapi.routing.APIRouter object at 0x00000139A3122AD0>, include_context=_RouterIncludeConte...
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 2727, in handle
+    await included_router._handle_selected(scope, receive, send)
+          │               │                │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139A3DD11C0>
+          │               │                │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E11940>
+          │               │                └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │               └ <function _IncludedRouter._handle_selected at 0x000001399BE060C0>
+          └ _IncludedRouter(original_router=<fastapi.routing.APIRouter object at 0x00000139A3122AD0>, include_context=_RouterIncludeConte...
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 1773, in _handle_selected
+    await original_route.handle(scope, receive, send)
+          │              │      │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139A3DD11C0>
+          │              │      │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E11940>
+          │              │      └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │              └ <function APIRoute.handle at 0x000001399BE04040>
+          └ APIRoute(path='/ai/sessions/{session_id}/messages', name='get_session_messages', methods=['GET'])
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 1264, in handle
+    await app(scope, receive, send)
+          │   │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139A3DD11C0>
+          │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E11940>
+          │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          └ <function request_response.<locals>.app at 0x00000139A3DD2480>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 150, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+          │                            │    │        │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139A3DD11C0>
+          │                            │    │        │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E11940>
+          │                            │    │        └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │                            │    └ <starlette.requests.Request object at 0x00000139B44E9180>
+          │                            └ <function request_response.<locals>.app.<locals>.app at 0x00000139A3DD2FC0>
+          └ <function wrap_app_handling_exceptions at 0x000001399BDBB420>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+          │   │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139B4041300>
+          │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E11940>
+          │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          └ <function request_response.<locals>.app.<locals>.app at 0x00000139A3DD2FC0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 136, in app
+    response = await f(request)
+                     │ └ <starlette.requests.Request object at 0x00000139B44E9180>
+                     └ <function get_request_handler.<locals>.app at 0x00000139A3DD22A0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 690, in app
+    raw_response = await run_endpoint_function(
+                         └ <function run_endpoint_function at 0x000001399BDFB380>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 344, in run_endpoint_function
+    return await dependant.call(**values)
+                 │         │      └ {'db': <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x00000139B4621310>, 'session_id': 'dc235719-7437-4341-8ec6-d0b...
+                 │         └ <function get_session_messages at 0x00000139A31CFA60>
+                 └ Dependant(path_params=[ModelField(field_info=Path(PydanticUndefined), name='session_id', mode='validation', config=None)], qu...
+
+  File "D:\self\my-push\two\project\modules\ai\ai_controller.py", line 65, in get_session_messages
+    result = await db.execute(stmt)
+                   │  │       └ <sqlalchemy.sql.selectable.Select object at 0x00000139B4623980>
+                   │  └ <function AsyncSession.execute at 0x000001399DE8A340>
+                   └ <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x00000139B4621310>
+
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\ext\asyncio\session.py", line 448, in execute
+    result = await greenlet_spawn(
+                   └ <function greenlet_spawn at 0x000001399C276660>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 201, in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+             │       │      │   └ <built-in function exc_info>
+             │       │      └ <module 'sys' (built-in)>
+             │       └ <method 'throw' of 'greenlet.greenlet' objects>
+             └ <_AsyncIoGreenlet object at 0x00000139A3E0B7C0 (otid=0x000001399B543D60) dead>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2373, in execute
+    return self._execute_internal(
+           │    └ <function Session._execute_internal at 0x000001399DDABCE0>
+           └ <sqlalchemy.orm.session.Session object at 0x00000139B46228A0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2261, in _execute_internal
+    conn = self._connection_for_bind(bind)
+           │    │                    └ Engine(postgresql+asyncpg://postgres:***@db.drhaetogukdhfwyrzyeq.supabase.co:5432/postgres)
+           │    └ <function Session._connection_for_bind at 0x000001399DDABA60>
+           └ <sqlalchemy.orm.session.Session object at 0x00000139B46228A0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2113, in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+           │     │                    │       └ None
+           │     │                    └ Engine(postgresql+asyncpg://postgres:***@db.drhaetogukdhfwyrzyeq.supabase.co:5432/postgres)
+           │     └ <function SessionTransaction._connection_for_bind at 0x000001399DDAA520>
+           └ <sqlalchemy.orm.session.SessionTransaction object at 0x00000139A3E0AF90>
+  File "<string>", line 2, in _connection_for_bind
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                │  │      │      └ {}
+                │  │      └ (Engine(postgresql+asyncpg://postgres:***@db.drhaetogukdhfwyrzyeq.supabase.co:5432/postgres), None)
+                │  └ <sqlalchemy.orm.session.SessionTransaction object at 0x00000139A3E0AF90>
+                └ <function SessionTransaction._connection_for_bind at 0x000001399DDAA340>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 1191, in _connection_for_bind
+    conn = bind.connect()
+           │    └ <function Engine.connect at 0x000001399D7FDB20>
+           └ Engine(postgresql+asyncpg://postgres:***@db.drhaetogukdhfwyrzyeq.supabase.co:5432/postgres)
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3295, in connect
+    return self._connection_cls(self)
+           │    │               └ Engine(postgresql+asyncpg://postgres:***@db.drhaetogukdhfwyrzyeq.supabase.co:5432/postgres)
+           │    └ <class 'sqlalchemy.engine.base.Connection'>
+           └ Engine(postgresql+asyncpg://postgres:***@db.drhaetogukdhfwyrzyeq.supabase.co:5432/postgres)
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 144, in __init__
+    self._dbapi_connection = engine.raw_connection()
+    │                        │      └ <function Engine.raw_connection at 0x000001399D7FDBC0>
+    │                        └ Engine(postgresql+asyncpg://postgres:***@db.drhaetogukdhfwyrzyeq.supabase.co:5432/postgres)
+    └ <sqlalchemy.engine.base.Connection object at 0x00000139B4620D70>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3319, in raw_connection
+    return self.pool.connect()
+           │    │    └ <function Pool.connect at 0x000001399C2FE2A0>
+           │    └ <sqlalchemy.pool.impl.AsyncAdaptedQueuePool object at 0x000001399E1D8980>
+           └ Engine(postgresql+asyncpg://postgres:***@db.drhaetogukdhfwyrzyeq.supabase.co:5432/postgres)
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           │                │         └ <sqlalchemy.pool.impl.AsyncAdaptedQueuePool object at 0x000001399E1D8980>
+           │                └ <classmethod(<function _ConnectionFairy._checkout at 0x000001399C3E4540>)>
+           └ <class 'sqlalchemy.pool.base._ConnectionFairy'>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            │                 │        └ <sqlalchemy.pool.impl.AsyncAdaptedQueuePool object at 0x000001399E1D8980>
+            │                 └ <classmethod(<function _ConnectionRecord.checkout at 0x000001399C2FEF20>)>
+            └ <class 'sqlalchemy.pool.base._ConnectionRecord'>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 717, in checkout
+    with util.safe_reraise():
+         │    └ <class 'sqlalchemy.util.langhelpers.safe_reraise'>
+         └ <module 'sqlalchemy.util' from 'D:\\self\\my-push\\two\\project\\.venv\\Lib\\site-packages\\sqlalchemy\\util\\__init__.py'>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 122, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+          │         │              └ <traceback object at 0x00000139B40559C0>
+          │         └ <method 'with_traceback' of 'BaseException' objects>
+          └ ConnectionError('unexpected connection_lost() call')
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 715, in checkout
+    dbapi_connection = rec.get_connection()
+                       │   └ <function _ConnectionRecord.get_connection at 0x000001399C2FF560>
+                       └ <sqlalchemy.pool.base._ConnectionRecord object at 0x00000139A3D23C50>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 866, in get_connection
+    self.__connect()
+    └ <sqlalchemy.pool.base._ConnectionRecord object at 0x00000139A3D23C50>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         │    └ <class 'sqlalchemy.util.langhelpers.safe_reraise'>
+         └ <module 'sqlalchemy.util' from 'D:\\self\\my-push\\two\\project\\.venv\\Lib\\site-packages\\sqlalchemy\\util\\__init__.py'>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 122, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+          │         │              └ <traceback object at 0x00000139B40F6E80>
+          │         └ <method 'with_traceback' of 'BaseException' objects>
+          └ ConnectionError('unexpected connection_lost() call')
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+    │    │                               │    │               └ <sqlalchemy.pool.base._ConnectionRecord object at 0x00000139A3D23C50>
+    │    │                               │    └ <function create_engine.<locals>.connect at 0x000001399DF35A80>
+    │    │                               └ <sqlalchemy.pool.impl.AsyncAdaptedQueuePool object at 0x000001399E1D8980>
+    │    └ <member 'dbapi_connection' of '_ConnectionRecord' objects>
+    └ <sqlalchemy.pool.base._ConnectionRecord object at 0x00000139A3D23C50>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           │       │        │            └ immutabledict({'host': 'db.drhaetogukdhfwyrzyeq.supabase.co', 'database': 'postgres', 'user': 'postgres', 'password': '8?9sad...
+           │       │        └ []
+           │       └ <function DefaultDialect.connect at 0x000001399D8A58A0>
+           └ <sqlalchemy.dialects.postgresql.asyncpg.PGDialect_asyncpg object at 0x000001399E1D8590>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           │    │            │        │        └ {'host': 'db.drhaetogukdhfwyrzyeq.supabase.co', 'database': 'postgres', 'user': 'postgres', 'password': '8?9sad)sN3AFWx@', 'p...
+           │    │            │        └ ()
+           │    │            └ <function AsyncAdapt_asyncpg_dbapi.connect at 0x000001399E09DBC0>
+           │    └ <sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi object at 0x000001399E1D8440>
+           └ <sqlalchemy.dialects.postgresql.asyncpg.PGDialect_asyncpg object at 0x000001399E1D8590>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 955, in connect
+    await_only(creator_fn(*arg, **kw)),
+    │          │           │      └ {'host': 'db.drhaetogukdhfwyrzyeq.supabase.co', 'database': 'postgres', 'user': 'postgres', 'password': '8?9sad)sN3AFWx@', 'p...
+    │          │           └ ()
+    │          └ <function connect at 0x000001399E169DA0>
+    └ <function await_only at 0x000001399C276520>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           │       │             └ <coroutine object connect at 0x00000139A3E49490>
+           │       └ <attribute 'parent' of 'greenlet.greenlet' objects>
+           └ <_AsyncIoGreenlet object at 0x00000139A3E0B7C0 (otid=0x000001399B543D60) dead>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+                  └ <coroutine object connect at 0x00000139A3E49490>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\asyncpg\connection.py", line 2443, in connect
+    return await connect_utils._connect(
+                 │             └ <function _connect at 0x000001399E1956C0>
+                 └ <module 'asyncpg.connect_utils' from 'D:\\self\\my-push\\two\\project\\.venv\\Lib\\site-packages\\asyncpg\\connect_utils.py'>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\asyncpg\connect_utils.py", line 1249, in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+          │             │          └ <class 'asyncpg.exceptions._base.TargetServerAttributeNotMatched'>
+          │             └ <module 'asyncpg.exceptions' from 'D:\\self\\my-push\\two\\project\\.venv\\Lib\\site-packages\\asyncpg\\exceptions\\__init__....
+          └ ConnectionError('unexpected connection_lost() call')
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\asyncpg\connect_utils.py", line 1218, in _connect
+    conn = await _connect_addr(
+                 └ <function _connect_addr at 0x000001399E194E00>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\asyncpg\connect_utils.py", line 1054, in _connect_addr
+    return await __connect_addr(params, True, *args)
+                 │              │              └ (('db.drhaetogukdhfwyrzyeq.supabase.co', 5432), <_WindowsSelectorEventLoop running=True closed=False debug=False>, Connection...
+                 │              └ ConnectionParameters(user='postgres', password='8?9sad)sN3AFWx@', database='postgres', ssl=<ssl.SSLContext object at 0x000001...
+                 └ <function __connect_addr at 0x000001399E195080>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\asyncpg\connect_utils.py", line 1099, in __connect_addr
+    tr, pr = await connector
+                   └ <coroutine object _create_ssl_connection at 0x00000139B3284040>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\asyncpg\connect_utils.py", line 977, in _create_ssl_connection
+    do_ssl_upgrade = await pr.on_data
+                           │  └ <Future finished exception=ConnectionError('unexpected connection_lost() call')>
+                           └ <asyncpg.connect_utils.TLSUpgradeProto object at 0x00000139B45AC050>
+
+ConnectionError: unexpected connection_lost() call
+2026-07-26 16:22:57.955 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 16:22:57.967 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /auth/me
+2026-07-26 16:22:58.987 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 1031.68ms
+2026-07-26 16:22:59.340 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions/dc235719-7437-4341-8ec6-d0b8131dbad7/messages
+2026-07-26 16:23:00.579 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /auth/me | 状态码: 200 | 耗时: 2612.67ms
+2026-07-26 16:23:01.697 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions/dc235719-7437-4341-8ec6-d0b8131dbad7/messages | 状态码: 200 | 耗时: 2357.38ms
+2026-07-26 16:24:07.908 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 16:24:08.116 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /auth/me
+2026-07-26 16:24:08.586 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /auth/me | 状态码: 200 | 耗时: 469.64ms
+2026-07-26 16:24:09.156 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 1248.93ms
+2026-07-26 16:24:09.551 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions/dc235719-7437-4341-8ec6-d0b8131dbad7/messages
+2026-07-26 16:24:10.249 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions/dc235719-7437-4341-8ec6-d0b8131dbad7/messages | 状态码: 200 | 耗时: 697.74ms
+2026-07-26 16:24:14.885 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions/dc235719-7437-4341-8ec6-d0b8131dbad7/messages
+2026-07-26 16:24:15.397 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions/dc235719-7437-4341-8ec6-d0b8131dbad7/messages | 状态码: 200 | 耗时: 512.34ms
+2026-07-26 16:24:33.933 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/chat/stream
+2026-07-26 16:24:46.323 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/chat/stream | 状态码: 200 | 耗时: 12389.97ms
+2026-07-26 16:27:36.960 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 16:27:37.031 | ERROR    | modules.core.middleware:dispatch:45 - ❌ [GET] /ai/sessions 内部崩溃 | 耗时: 71.36ms | 异常: (sqlalchemy.dialects.postgresql.asyncpg.InterfaceError) <class 'asyncpg.exceptions._base.InterfaceError'>: connection is closed
+[SQL: SELECT chat_sessions.id, chat_sessions.user_id, chat_sessions.title, chat_sessions.app_name, chat_sessions.is_pinned, chat_sessions.is_deleted, chat_sessions.created_at, chat_sessions.updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.user_id = $1::INTEGER AND chat_sessions.is_deleted = false ORDER BY chat_sessions.updated_at DESC]
+[parameters: (1,)]
+(Background on this error at: https://sqlalche.me/e/20/rvf5)
+Traceback (most recent call last):
+
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 843, in _start_transaction
+    self._transaction = self._connection.transaction(
+    │    │              │    └ <member '_connection' of 'AdaptedConnection' objects>
+    │    │              └ <AdaptedConnection <asyncpg.connection.Connection object at 0x00000139B4584410>>
+    │    └ <member '_transaction' of 'AsyncAdapt_asyncpg_connection' objects>
+    └ <AdaptedConnection <asyncpg.connection.Connection object at 0x00000139B4584410>>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\asyncpg\connection.py", line 302, in transaction
+    self._check_open()
+    │    └ <function Connection._check_open at 0x000001399E1B34C0>
+    └ <asyncpg.connection.Connection object at 0x00000139B4584410>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\asyncpg\connection.py", line 1605, in _check_open
+    raise exceptions.InterfaceError('connection is closed')
+          │          └ <class 'asyncpg.exceptions._base.InterfaceError'>
+          └ <module 'asyncpg.exceptions' from 'D:\\self\\my-push\\two\\project\\.venv\\Lib\\site-packages\\asyncpg\\exceptions\\__init__....
+
+asyncpg.exceptions._base.InterfaceError: connection is closed
+
+
+The above exception was the direct cause of the following exception:
+
+
+Traceback (most recent call last):
+
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+    │    │       └ <function DefaultDialect.do_execute at 0x000001399D8A6520>
+    │    └ <sqlalchemy.dialects.postgresql.asyncpg.PGDialect_asyncpg object at 0x000001399E1D8590>
+    └ <sqlalchemy.engine.base.Connection object at 0x00000139A3E01980>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    │      │       │          └ (1,)
+    │      │       └ 'SELECT chat_sessions.id, chat_sessions.user_id, chat_sessions.title, chat_sessions.app_name, chat_sessions.is_pinned, chat_s...
+    │      └ <function AsyncAdapt_asyncpg_cursor.execute at 0x000001399E09C220>
+    └ <sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_cursor object at 0x00000139B470ABC0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 585, in execute
+    self._adapt_connection.await_(
+    │    └ <member '_adapt_connection' of 'AsyncAdapt_asyncpg_cursor' objects>
+    └ <sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_cursor object at 0x00000139B470ABC0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           │       │             └ <coroutine object AsyncAdapt_asyncpg_cursor._prepare_and_execute at 0x00000139B6465000>
+           │       └ <attribute 'parent' of 'greenlet.greenlet' objects>
+           └ <_AsyncIoGreenlet object at 0x00000139B4686A00 (otid=0x000001399B543D60) dead>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+                  └ <Future finished result=None>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 520, in _prepare_and_execute
+    await adapt_connection._start_transaction()
+          │                └ <function AsyncAdapt_asyncpg_connection._start_transaction at 0x000001399E09D300>
+          └ <AdaptedConnection <asyncpg.connection.Connection object at 0x00000139B4584410>>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 850, in _start_transaction
+    self._handle_exception(error)
+    │    └ <function AsyncAdapt_asyncpg_connection._handle_exception at 0x000001399E09CF40>
+    └ <AdaptedConnection <asyncpg.connection.Connection object at 0x00000139B4584410>>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 797, in _handle_exception
+    raise translated_error from error
+          │                     └ InterfaceError('connection is closed')
+          └ InterfaceError("<class 'asyncpg.exceptions._base.InterfaceError'>: connection is closed")
+
+sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.InterfaceError: <class 'asyncpg.exceptions._base.InterfaceError'>: connection is closed
+
+
+The above exception was the direct cause of the following exception:
+
+
+Traceback (most recent call last):
+
+  File "<string>", line 1, in <module>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\multiprocessing\spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               │     │   └ 700
+               │     └ 3
+               └ <function _main at 0x000001399A9EACA0>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\multiprocessing\spawn.py", line 135, in _main
+    return self._bootstrap(parent_sentinel)
+           │    │          └ 700
+           │    └ <function BaseProcess._bootstrap at 0x000001399A440180>
+           └ <SpawnProcess name='SpawnProcess-1' parent=36168 started>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\multiprocessing\process.py", line 313, in _bootstrap
+    self.run()
+    │    └ <function BaseProcess.run at 0x000001399A3C7920>
+    └ <SpawnProcess name='SpawnProcess-1' parent=36168 started>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\multiprocessing\process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+    │    │        │    │        │    └ {'config': <uvicorn.config.Config object at 0x000001399A416F90>, 'target': <bound method Server.run of <uvicorn.server.Server...
+    │    │        │    │        └ <SpawnProcess name='SpawnProcess-1' parent=36168 started>
+    │    │        │    └ ()
+    │    │        └ <SpawnProcess name='SpawnProcess-1' parent=36168 started>
+    │    └ <function subprocess_started at 0x000001399C05EF20>
+    └ <SpawnProcess name='SpawnProcess-1' parent=36168 started>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\uvicorn\_subprocess.py", line 80, in subprocess_started
+    target(sockets=sockets)
+    │              └ [<socket.socket fd=892, family=2, type=1, proto=6, laddr=('127.0.0.1', 8521)>]
+    └ <bound method Server.run of <uvicorn.server.Server object at 0x00000139A3C6B230>>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\uvicorn\server.py", line 74, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+           │           │    │             │                      │    │      └ <function Config.get_loop_factory at 0x000001399BF41DA0>
+           │           │    │             │                      │    └ <uvicorn.config.Config object at 0x000001399A416F90>
+           │           │    │             │                      └ <uvicorn.server.Server object at 0x00000139A3C6B230>
+           │           │    │             └ [<socket.socket fd=892, family=2, type=1, proto=6, laddr=('127.0.0.1', 8521)>]
+           │           │    └ <function Server.serve at 0x000001399C05DD00>
+           │           └ <uvicorn.server.Server object at 0x00000139A3C6B230>
+           └ <function run at 0x000001399AA439C0>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           │      │   └ <coroutine object Server.serve at 0x000001399A3AC3C0>
+           │      └ <function Runner.run at 0x000001399AC9ED40>
+           └ <asyncio.runners.Runner object at 0x00000139A3C6BB60>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           │    │     │                  └ <Task pending name='Task-1' coro=<Server.serve() running at D:\self\my-push\two\project\.venv\Lib\site-packages\uvicorn\serve...
+           │    │     └ <function BaseEventLoop.run_until_complete at 0x000001399AC9C680>
+           │    └ <_WindowsSelectorEventLoop running=True closed=False debug=False>
+           └ <asyncio.runners.Runner object at 0x00000139A3C6BB60>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\asyncio\base_events.py", line 712, in run_until_complete
+    self.run_forever()
+    │    └ <function BaseEventLoop.run_forever at 0x000001399AC9C5E0>
+    └ <_WindowsSelectorEventLoop running=True closed=False debug=False>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\asyncio\base_events.py", line 683, in run_forever
+    self._run_once()
+    │    └ <function BaseEventLoop._run_once at 0x000001399AC9E3E0>
+    └ <_WindowsSelectorEventLoop running=True closed=False debug=False>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\asyncio\base_events.py", line 2050, in _run_once
+    handle._run()
+    │      └ <function Handle._run at 0x000001399AC1F1A0>
+    └ <Handle Task.task_wakeup()>
+  File "C:\Users\Administrator\AppData\Roaming\uv\python\cpython-3.13.6-windows-x86_64-none\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    │    │            │    │           │    └ <member '_args' of 'Handle' objects>
+    │    │            │    │           └ <Handle Task.task_wakeup()>
+    │    │            │    └ <member '_callback' of 'Handle' objects>
+    │    │            └ <Handle Task.task_wakeup()>
+    │    └ <member '_context' of 'Handle' objects>
+    └ <Handle Task.task_wakeup()>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\uvicorn\protocols\http\h11_impl.py", line 416, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+                   └ <uvicorn.middleware.proxy_headers.ProxyHeadersMiddleware object at 0x000001399A386900>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+                 │    │   │      │        └ <bound method RequestResponseCycle.send of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139A3DEEC10>>
+                 │    │   │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139A3DEE...
+                 │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+                 │    └ <fastapi.applications.FastAPI object at 0x00000139A3C9ED50>
+                 └ <uvicorn.middleware.proxy_headers.ProxyHeadersMiddleware object at 0x000001399A386900>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\applications.py", line 1163, in __call__
+    await super().__call__(scope, receive, send)
+                           │      │        └ <bound method RequestResponseCycle.send of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139A3DEEC10>>
+                           │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139A3DEE...
+                           └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+          │    │                │      │        └ <bound method RequestResponseCycle.send of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139A3DEEC10>>
+          │    │                │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139A3DEE...
+          │    │                └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    └ <starlette.middleware.errors.ServerErrorMiddleware object at 0x00000139A3CB9400>
+          └ <fastapi.applications.FastAPI object at 0x00000139A3C9ED50>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+          │    │   │      │        └ <function ServerErrorMiddleware.__call__.<locals>._send at 0x00000139A3D9F740>
+          │    │   │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139A3DEE...
+          │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    └ <starlette.middleware.cors.CORSMiddleware object at 0x00000139A3CB92B0>
+          └ <starlette.middleware.errors.ServerErrorMiddleware object at 0x00000139A3CB9400>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\middleware\cors.py", line 88, in __call__
+    await self.app(scope, receive, send)
+          │    │   │      │        └ <function ServerErrorMiddleware.__call__.<locals>._send at 0x00000139A3D9F740>
+          │    │   │      └ <bound method RequestResponseCycle.receive of <uvicorn.protocols.http.h11_impl.RequestResponseCycle object at 0x00000139A3DEE...
+          │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    └ <modules.core.middleware.APILoggingMiddleware object at 0x00000139A3CB9160>
+          └ <starlette.middleware.cors.CORSMiddleware object at 0x00000139A3CB92B0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\middleware\base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+                     │    │             │        └ <function BaseHTTPMiddleware.__call__.<locals>.call_next at 0x00000139B4041300>
+                     │    │             └ <starlette.middleware.base._CachedRequest object at 0x00000139B44EA150>
+                     │    └ <bound method APILoggingMiddleware.dispatch of <modules.core.middleware.APILoggingMiddleware object at 0x00000139A3CB9160>>
+                     └ <modules.core.middleware.APILoggingMiddleware object at 0x00000139A3CB9160>
+
+> File "D:\self\my-push\two\project\modules\core\middleware.py", line 28, in dispatch
+    response: Response = await call_next(request)
+                               │         └ <starlette.middleware.base._CachedRequest object at 0x00000139B44EA150>
+                               └ <function BaseHTTPMiddleware.__call__.<locals>.call_next at 0x00000139B4041300>
+
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+          │            │       │            │       └ <attribute '__context__' of 'BaseException' objects>
+          │            │       │            └ InterfaceError("(sqlalchemy.dialects.postgresql.asyncpg.InterfaceError) <class 'asyncpg.exceptions._base.InterfaceError'>: co...
+          │            │       └ <attribute '__cause__' of 'BaseException' objects>
+          │            └ InterfaceError("(sqlalchemy.dialects.postgresql.asyncpg.InterfaceError) <class 'asyncpg.exceptions._base.InterfaceError'>: co...
+          └ InterfaceError("(sqlalchemy.dialects.postgresql.asyncpg.InterfaceError) <class 'asyncpg.exceptions._base.InterfaceError'>: co...
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+          │    │   │      │                      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.send_no_error at 0x00000139A3E10360>
+          │    │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E119E0>
+          │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    └ <starlette.middleware.exceptions.ExceptionMiddleware object at 0x00000139A3CB9010>
+          └ <modules.core.middleware.APILoggingMiddleware object at 0x00000139A3CB9160>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+          │                            │    │    │     │      │        └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.send_no_error at 0x00000139A3E10360>
+          │                            │    │    │     │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E119E0>
+          │                            │    │    │     └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │                            │    │    └ <starlette.requests.Request object at 0x00000139A3E10A50>
+          │                            │    └ <fastapi.middleware.asyncexitstack.AsyncExitStackMiddleware object at 0x00000139A3CB8EC0>
+          │                            └ <starlette.middleware.exceptions.ExceptionMiddleware object at 0x00000139A3CB9010>
+          └ <function wrap_app_handling_exceptions at 0x000001399BDBB420>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+          │   │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139B4118220>
+          │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E119E0>
+          │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          └ <fastapi.middleware.asyncexitstack.AsyncExitStackMiddleware object at 0x00000139A3CB8EC0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+          │    │   │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139B4118220>
+          │    │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E119E0>
+          │    │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    └ <fastapi.routing.APIRouter object at 0x00000139A3C3ACF0>
+          └ <fastapi.middleware.asyncexitstack.AsyncExitStackMiddleware object at 0x00000139A3CB8EC0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+          │    │                │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139B4118220>
+          │    │                │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E119E0>
+          │    │                └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    └ <bound method APIRouter.app of <fastapi.routing.APIRouter object at 0x00000139A3C3ACF0>>
+          └ <fastapi.routing.APIRouter object at 0x00000139A3C3ACF0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 2672, in app
+    await route.handle(scope, receive, send)
+          │     │      │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139B4118220>
+          │     │      │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E119E0>
+          │     │      └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │     └ <function _IncludedRouter.handle at 0x000001399BE06020>
+          └ _IncludedRouter(original_router=<fastapi.routing.APIRouter object at 0x00000139A3122AD0>, include_context=_RouterIncludeConte...
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 1753, in handle
+    await self.original_router.handle(scope, receive, send)
+          │    │               │      │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139B4118220>
+          │    │               │      │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E119E0>
+          │    │               │      └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │    │               └ <function APIRouter.handle at 0x000001399BE07EC0>
+          │    └ <fastapi.routing.APIRouter object at 0x00000139A3122AD0>
+          └ _IncludedRouter(original_router=<fastapi.routing.APIRouter object at 0x00000139A3122AD0>, include_context=_RouterIncludeConte...
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 2727, in handle
+    await included_router._handle_selected(scope, receive, send)
+          │               │                │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139B4118220>
+          │               │                │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E119E0>
+          │               │                └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │               └ <function _IncludedRouter._handle_selected at 0x000001399BE060C0>
+          └ _IncludedRouter(original_router=<fastapi.routing.APIRouter object at 0x00000139A3122AD0>, include_context=_RouterIncludeConte...
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 1773, in _handle_selected
+    await original_route.handle(scope, receive, send)
+          │              │      │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139B4118220>
+          │              │      │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E119E0>
+          │              │      └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │              └ <function APIRoute.handle at 0x000001399BE04040>
+          └ APIRoute(path='/ai/sessions', name='get_user_sessions', methods=['GET'])
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 1264, in handle
+    await app(scope, receive, send)
+          │   │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139B4118220>
+          │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E119E0>
+          │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          └ <function request_response.<locals>.app at 0x00000139B4118180>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 150, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+          │                            │    │        │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139B4118220>
+          │                            │    │        │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E119E0>
+          │                            │    │        └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          │                            │    └ <starlette.requests.Request object at 0x00000139B4118910>
+          │                            └ <function request_response.<locals>.app.<locals>.app at 0x00000139B4118AE0>
+          └ <function wrap_app_handling_exceptions at 0x000001399BDBB420>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+          │   │      │        └ <function wrap_app_handling_exceptions.<locals>.wrapped_app.<locals>.sender at 0x00000139B4118E00>
+          │   │      └ <function BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.receive_or_disconnect at 0x00000139A3E119E0>
+          │   └ {'type': 'http', 'asgi': {'version': '3.0', 'spec_version': '2.3'}, 'http_version': '1.1', 'server': ('127.0.0.1', 8521), 'cl...
+          └ <function request_response.<locals>.app.<locals>.app at 0x00000139B4118AE0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 136, in app
+    response = await f(request)
+                     │ └ <starlette.requests.Request object at 0x00000139B4118910>
+                     └ <function get_request_handler.<locals>.app at 0x00000139B41189A0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 690, in app
+    raw_response = await run_endpoint_function(
+                         └ <function run_endpoint_function at 0x000001399BDFB380>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\fastapi\routing.py", line 344, in run_endpoint_function
+    return await dependant.call(**values)
+                 │         │      └ {'db': <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x00000139B41185F0>, 'user_id': 1}
+                 │         └ <function get_user_sessions at 0x00000139A31CC5E0>
+                 └ Dependant(path_params=[], query_params=[ModelField(field_info=Query(1), name='user_id', mode='validation', config=None)], hea...
+
+  File "D:\self\my-push\two\project\modules\ai\ai_controller.py", line 35, in get_user_sessions
+    result = await db.execute(stmt)
+                   │  │       └ <sqlalchemy.sql.selectable.Select object at 0x00000139B45DAF30>
+                   │  └ <function AsyncSession.execute at 0x000001399DE8A340>
+                   └ <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x00000139B41185F0>
+
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\ext\asyncio\session.py", line 448, in execute
+    result = await greenlet_spawn(
+                   └ <function greenlet_spawn at 0x000001399C276660>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+             │       │      └ None
+             │       └ <method 'switch' of 'greenlet.greenlet' objects>
+             └ <_AsyncIoGreenlet object at 0x00000139B4686A00 (otid=0x000001399B543D60) dead>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2373, in execute
+    return self._execute_internal(
+           │    └ <function Session._execute_internal at 0x000001399DDABCE0>
+           └ <sqlalchemy.orm.session.Session object at 0x00000139B45DA7B0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2271, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                   │      │                 └ <classmethod(<function AbstractORMCompileState.orm_execute_statement at 0x000001399DA2DEE0>)>
+                   │      └ <class 'sqlalchemy.orm.context.ORMSelectCompileState'>
+                   └ typing.Any
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+             │    └ <function Connection.execute at 0x000001399D7FAAC0>
+             └ <sqlalchemy.engine.base.Connection object at 0x00000139A3E01980>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1421, in execute
+    return meth(
+           └ <bound method ClauseElement._execute_on_connection of <sqlalchemy.sql.selectable.Select object at 0x00000139B45DAF30>>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           │          └ <function Connection._execute_clauseelement at 0x000001399D7FADE0>
+           └ <sqlalchemy.engine.base.Connection object at 0x00000139A3E01980>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+          │    └ <function Connection._execute_context at 0x000001399D7FAFC0>
+          └ <sqlalchemy.engine.base.Connection object at 0x00000139A3E01980>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+           │    └ <function Connection._exec_single_context at 0x000001399D7FB060>
+           └ <sqlalchemy.engine.base.Connection object at 0x00000139A3E01980>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1988, in _exec_single_context
+    self._handle_dbapi_exception(
+    │    └ <function Connection._handle_dbapi_exception at 0x000001399D7FB2E0>
+    └ <sqlalchemy.engine.base.Connection object at 0x00000139A3E01980>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 2365, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+          │                    │              │                 └ InterfaceError("<class 'asyncpg.exceptions._base.InterfaceError'>: connection is closed")
+          │                    │              └ (<class 'sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.InterfaceError'>, InterfaceError("<class 'asyncpg.ex...
+          │                    └ <method 'with_traceback' of 'BaseException' objects>
+          └ InterfaceError("(sqlalchemy.dialects.postgresql.asyncpg.InterfaceError) <class 'asyncpg.exceptions._base.InterfaceError'>: co...
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+    │    │       └ <function DefaultDialect.do_execute at 0x000001399D8A6520>
+    │    └ <sqlalchemy.dialects.postgresql.asyncpg.PGDialect_asyncpg object at 0x000001399E1D8590>
+    └ <sqlalchemy.engine.base.Connection object at 0x00000139A3E01980>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    │      │       │          └ (1,)
+    │      │       └ 'SELECT chat_sessions.id, chat_sessions.user_id, chat_sessions.title, chat_sessions.app_name, chat_sessions.is_pinned, chat_s...
+    │      └ <function AsyncAdapt_asyncpg_cursor.execute at 0x000001399E09C220>
+    └ <sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_cursor object at 0x00000139B470ABC0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 585, in execute
+    self._adapt_connection.await_(
+    │    └ <member '_adapt_connection' of 'AsyncAdapt_asyncpg_cursor' objects>
+    └ <sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_cursor object at 0x00000139B470ABC0>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           │       │             └ <coroutine object AsyncAdapt_asyncpg_cursor._prepare_and_execute at 0x00000139B6465000>
+           │       └ <attribute 'parent' of 'greenlet.greenlet' objects>
+           └ <_AsyncIoGreenlet object at 0x00000139B4686A00 (otid=0x000001399B543D60) dead>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+                  └ <Future finished result=None>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 520, in _prepare_and_execute
+    await adapt_connection._start_transaction()
+          │                └ <function AsyncAdapt_asyncpg_connection._start_transaction at 0x000001399E09D300>
+          └ <AdaptedConnection <asyncpg.connection.Connection object at 0x00000139B4584410>>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 850, in _start_transaction
+    self._handle_exception(error)
+    │    └ <function AsyncAdapt_asyncpg_connection._handle_exception at 0x000001399E09CF40>
+    └ <AdaptedConnection <asyncpg.connection.Connection object at 0x00000139B4584410>>
+  File "D:\self\my-push\two\project\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 797, in _handle_exception
+    raise translated_error from error
+          │                     └ InterfaceError('connection is closed')
+          └ InterfaceError("<class 'asyncpg.exceptions._base.InterfaceError'>: connection is closed")
+
+sqlalchemy.exc.InterfaceError: (sqlalchemy.dialects.postgresql.asyncpg.InterfaceError) <class 'asyncpg.exceptions._base.InterfaceError'>: connection is closed
+[SQL: SELECT chat_sessions.id, chat_sessions.user_id, chat_sessions.title, chat_sessions.app_name, chat_sessions.is_pinned, chat_sessions.is_deleted, chat_sessions.created_at, chat_sessions.updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.user_id = $1::INTEGER AND chat_sessions.is_deleted = false ORDER BY chat_sessions.updated_at DESC]
+[parameters: (1,)]
+(Background on this error at: https://sqlalche.me/e/20/rvf5)
+2026-07-26 16:29:04.524 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 16:29:04.597 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /auth/me
+2026-07-26 16:29:07.161 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /auth/me | 状态码: 200 | 耗时: 2564.12ms
+2026-07-26 16:29:09.466 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 4942.68ms
+2026-07-26 16:29:09.497 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions/070ede5a-7ad9-4851-82fe-4180d15b96ef/messages
+2026-07-26 16:29:11.490 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions/070ede5a-7ad9-4851-82fe-4180d15b96ef/messages | 状态码: 200 | 耗时: 1993.41ms
+2026-07-26 16:29:23.834 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/chat/stream
+2026-07-26 16:29:32.377 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/chat/stream | 状态码: 200 | 耗时: 8543.11ms
+2026-07-26 16:30:50.046 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 16:30:52.724 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 2677.94ms
+2026-07-26 16:42:04.469 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /auth/me
+2026-07-26 16:42:04.931 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 16:42:09.097 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /auth/me | 状态码: 200 | 耗时: 4628.73ms
+2026-07-26 16:42:10.958 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 6026.95ms
+2026-07-26 16:42:11.044 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions/193dfa74-b4fd-4e9c-9d8c-517dc5592da9/messages
+2026-07-26 16:42:12.475 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions/193dfa74-b4fd-4e9c-9d8c-517dc5592da9/messages | 状态码: 200 | 耗时: 1431.02ms
+2026-07-26 16:43:41.632 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/chat/stream
+2026-07-26 16:44:10.747 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/chat/stream | 状态码: 200 | 耗时: 29115.43ms
+2026-07-26 16:45:34.374 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 16:45:36.821 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 2446.94ms
+2026-07-26 16:46:01.152 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 16:46:01.159 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /auth/me
+2026-07-26 16:46:03.131 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 1979.23ms
+2026-07-26 16:46:03.813 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions/66904cae-44b8-46eb-91e0-35949befeda4/messages
+2026-07-26 16:46:04.720 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /auth/me | 状态码: 200 | 耗时: 3560.73ms
+2026-07-26 16:46:05.830 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions/66904cae-44b8-46eb-91e0-35949befeda4/messages | 状态码: 200 | 耗时: 2017.83ms
+2026-07-26 16:46:10.344 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/chat/stream
+2026-07-26 16:46:23.052 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/chat/stream | 状态码: 200 | 耗时: 12708.31ms
+2026-07-26 16:51:43.045 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 16:51:43.097 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /auth/me
+2026-07-26 16:51:45.863 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 2818.17ms
+2026-07-26 16:51:45.913 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions/369caadd-6f82-40e8-896e-c556f5ca005d/messages
+2026-07-26 16:51:48.310 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /auth/me | 状态码: 200 | 耗时: 5213.03ms
+2026-07-26 16:51:49.881 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions/369caadd-6f82-40e8-896e-c556f5ca005d/messages | 状态码: 200 | 耗时: 3967.38ms
+2026-07-26 16:52:22.053 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/chat/stream
+2026-07-26 16:52:22.211 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/chat/stream | 状态码: 200 | 耗时: 157.77ms
+2026-07-26 16:54:02.804 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 16:54:07.585 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 4780.89ms
+2026-07-26 16:57:04.375 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions
+2026-07-26 16:57:04.500 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /auth/me
+2026-07-26 16:57:07.157 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /auth/me | 状态码: 200 | 耗时: 2659.84ms
+2026-07-26 16:57:08.386 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/chat/stream
+2026-07-26 16:57:08.468 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/chat/stream | 状态码: 200 | 耗时: 82.17ms
+2026-07-26 16:57:09.538 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions | 状态码: 200 | 耗时: 5163.52ms
+2026-07-26 16:57:09.583 | INFO     | modules.core.middleware:dispatch:24 - --> [GET] /ai/sessions/d1979bec-5a1b-4790-a4ac-1b439cb43838/messages
+2026-07-26 16:57:13.868 | INFO     | modules.core.middleware:dispatch:35 - <-- [GET] /ai/sessions/d1979bec-5a1b-4790-a4ac-1b439cb43838/messages | 状态码: 200 | 耗时: 4284.75ms

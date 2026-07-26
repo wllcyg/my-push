@@ -19,7 +19,7 @@ from deep_agents import create_agent
 from modules.core.llm import default_model
 
 # 引入项目自带的 EnterpriseRedisService (支持 Upstash Redis / 本地 Redis)
-from redis.service import EnterpriseRedisService
+from redis_service_module.service import EnterpriseRedisService
 
 
 class RedisMessageStore:
@@ -35,7 +35,7 @@ class RedisMessageStore:
         ttl_seconds: int = 1800
     ):
         if redis_service is None:
-            from redis.service import redis_service as default_redis
+            from redis_service_module.service import redis_service as default_redis
             self.redis_service = default_redis
         else:
             self.redis_service = redis_service

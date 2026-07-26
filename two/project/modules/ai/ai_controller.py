@@ -121,7 +121,6 @@ async def chat(
     ai_service: AiService = Depends(get_ai_service),
     db: AsyncSession = Depends(get_db)
 ):
-
     """
     同步对话接口：处理提问并持久化到数据库
     """

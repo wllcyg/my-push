@@ -107,7 +107,7 @@ analyst_prompt = dedent("""\
     ## 工作流程
 
     1. 从 /workspace/sources/ 读取数据文件（或从调研结果中提取数字）
-    2. 在 REPL 中编写并运行 JavaScript (或 Python)，计算总和、均值、排名、增长率等
+    2. 在 Python REPL 中编写并运行代码，计算总和、均值、排名、增长率等
     3. 将分析结果保存到 /workspace/sources/analysis_*.md，包含计算逻辑与结论
 
     必须展示计算过程，结论可从 REPL 输出复现。所有输出使用中文。
@@ -160,7 +160,7 @@ orchestrator_base_prompt = dedent("""\
     - web-research、report-writer 是**技能**（写作指南），**不是**子 Agent，禁止作为 subagent_type 调用
     - 报告起草、修订、定稿由**主 Agent 自己**用 write_file / edit_file 完成，不要委派 task
 
-    ## 委派规则
+    ## 委派与容错规则
 
     - 每个调研员只负责一个聚焦的子主题
     - **每份报告最多 3 个调研员**——只选最相关的子主题
@@ -169,6 +169,7 @@ orchestrator_base_prompt = dedent("""\
     - 仅在确实需要数值计算时使用分析师
     - 每份报告只调用编辑一次（草稿完成后）
     - 调研完成后直接进入起草 → 审阅 → 定稿，不要额外开调研轮次
+    - **容错处理**：若某个子 Agent 执行超时或返回异常，无需重新发起相同的子任务；直接检查 /workspace/sources/ 中已成功写入的文件，基于已有材料继续进行起草或定稿，并在报告结语中注明缺失的视角。
 
     ## 文件约定
 

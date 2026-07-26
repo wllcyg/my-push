@@ -63,7 +63,12 @@ async def lifespan(app: FastAPI):
     except Exception:
         pass
 
+from modules.core.middleware import APILoggingMiddleware
+
 app = FastAPI(title="Project API with FastAPI", lifespan=lifespan)
+
+# 注册全局 API 自动化日志中间件
+app.add_middleware(APILoggingMiddleware)
 
 # 允许跨域请求 (CORS) 解决前端直连后端的报错
 app.add_middleware(
