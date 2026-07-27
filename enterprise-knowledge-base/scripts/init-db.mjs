@@ -13,9 +13,10 @@ const __dirname = path.dirname(__filename);
 async function initDatabase() {
   console.log('🚀 开始在 Supabase 执行 SQL 初始化建表...');
   const connectionString = process.env.POSTGRES_URL;
-
+  // 过滤掉 url 中的 sslmode 避免覆盖 ssl 对象选项
+  const cleanConnectionString = connectionString ? connectionString.replace(/\?sslmode=\w+/, '') : '';
   const client = new Client({
-    connectionString,
+    connectionString: cleanConnectionString,
     ssl: { rejectUnauthorized: false },
     connectionTimeoutMillis: 10000,
   });
