@@ -11,6 +11,7 @@ import {
   BellOutlined,
   PlusOutlined,
   BookOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 
@@ -28,6 +29,11 @@ export const MainLayout: React.FC = () => {
       label: '文档管理',
     },
     {
+      key: '/dictionary',
+      icon: <AppstoreOutlined className="text-purple-500" />,
+      label: '字典管理',
+    },
+    {
       key: '/categories',
       icon: <FolderOutlined className="text-emerald-500" />,
       label: '分类空间',
@@ -43,6 +49,15 @@ export const MainLayout: React.FC = () => {
       label: '系统配置',
     },
   ];
+
+  const getBreadcrumbTitle = () => {
+    if (location.pathname.includes('/editor')) return '在线编辑';
+    if (location.pathname.includes('/dictionary')) return '字典数据管理';
+    if (location.pathname.includes('/categories')) return '分类空间';
+    if (location.pathname.includes('/teams')) return '团队协作';
+    if (location.pathname.includes('/settings')) return '系统配置';
+    return '文档管理';
+  };
 
   return (
     <Layout className="min-h-screen bg-slate-50">
@@ -93,7 +108,7 @@ export const MainLayout: React.FC = () => {
             <Breadcrumb
               items={[
                 { title: '控制台' },
-                { title: location.pathname.includes('/editor') ? '在线编辑' : '文档列表' },
+                { title: getBreadcrumbTitle() },
               ]}
             />
           </div>

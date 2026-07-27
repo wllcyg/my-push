@@ -5,7 +5,7 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { bigintTransformer } from '@/common/transformers/bigint.transformer';
+import { bigintTransformer } from '../../common/transformers/bigint.transformer';
 
 /** 文档状态 */
 export enum DocumentStatus {

@@ -5,7 +5,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DocumentModule } from './document/document.module';
+import { StorageModule } from './storage/storage.module';
+import { DictionaryModule } from './dictionary/dictionary.module';
 import { DocumentEntity } from './document/entities/document.entity';
+import { CategoryEntity } from './dictionary/entities/category.entity';
+import { TeamEntity } from './dictionary/entities/team.entity';
+import { TagEntity } from './dictionary/entities/tag.entity';
 
 @Module({
   imports: [
@@ -14,6 +19,9 @@ import { DocumentEntity } from './document/entities/document.entity';
       isGlobal: true,
       envFilePath: '.env',
     }),
+
+    // Cloudflare R2 / 对象存储模块
+    StorageModule,
 
     // PostgreSQL + TypeORM 根连接
     TypeOrmModule.forRootAsync({
@@ -29,7 +37,7 @@ import { DocumentEntity } from './document/entities/document.entity';
         ssl: config.get<string>('POSTGRES_HOST')?.includes('supabase')
           ? { rejectUnauthorized: false }
           : false,
-        entities: [DocumentEntity],
+        entities: [DocumentEntity, CategoryEntity, TeamEntity, TagEntity],
         synchronize: false,
       }),
     }),
@@ -47,6 +55,7 @@ import { DocumentEntity } from './document/entities/document.entity';
 
     // 业务模块
     DocumentModule,
+    DictionaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

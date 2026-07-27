@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DocumentService } from './document.service';
 import { DocumentController } from './document.controller';
+import { FileParserService } from './parser/file-parser.service';
 import { DocumentEntity } from './entities/document.entity';
 import {
   DocumentContent,
@@ -17,7 +18,7 @@ import {
     ]),
   ],
   controllers: [DocumentController],
-  providers: [DocumentService],
-  exports: [DocumentService],
+  providers: [DocumentService, FileParserService],
+  exports: [DocumentService, FileParserService],
 })
 export class DocumentModule {}

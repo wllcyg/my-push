@@ -110,3 +110,27 @@ export async function deleteDocument(id: string): Promise<{ id: string; deleted:
   const res = await api.delete<{ id: string; deleted: boolean }>(`/documents/${id}`);
   return res.data;
 }
+
+/** 上传解析响应接口 */
+export interface UploadParseResult {
+  documentId: string;
+  title: string;
+  fileUrl: string | null;
+  fileSize: number;
+  fileExtension: string;
+  contentLength: number;
+  contentPreview: string;
+  status: DocumentStatus;
+}
+
+/** 上传文件并解析为 Markdown 文档草稿 */
+export async function uploadAndParseDocument(formData: FormData): Promise<UploadParseResult> {
+  const res = await api.post<UploadParseResult>('/documents/upload/parse', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+    timeout: 60000, // 文件解析与 Cloudflare R2 云存储上传耗时较长，增加超时时间至 60 秒
+  });
+  return res.data;
+}
+

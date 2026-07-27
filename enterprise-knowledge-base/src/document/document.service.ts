@@ -2,15 +2,17 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EntityManager } from 'typeorm';
-import { nextSnowflakeId } from '@/common/snowflake-id';
+import { nextSnowflakeId } from '../common/snowflake-id';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { QueryDocumentDto } from './dto/query-document.dto';
+import { UploadParseDto } from './dto/upload-parse.dto';
 import {
   DocumentEntity,
   DocumentStatus,
@@ -19,6 +21,13 @@ import {
   DocumentContent,
   DocumentContentDocument,
 } from './schemas/document-content.schema';
+import { R2StorageService } from '../storage/r2-storage.service';
+import { FileParserService } from './parser/file-parser.service';
+import {
+  decodeUploadFilename,
+  getExtension,
+  titleFromFilename,
+} from './parser/utils/markdown.util';
 
 /**
  * 文档服务
@@ -28,6 +37,8 @@ import {
  */
 @Injectable()
 export class DocumentService {
+  private readonly logger = new Logger(DocumentService.name);
+
   constructor(
     /** Postgres 实体管理器 */
     @InjectEntityManager()
@@ -35,7 +46,98 @@ export class DocumentService {
     /** Mongo 正文模型 */
     @InjectModel(DocumentContent.name)
     private readonly contentModel: Model<DocumentContentDocument>,
+    /** 文件解析服务 */
+    private readonly fileParserService: FileParserService,
+    /** Cloudflare R2 对象存储服务 */
+    private readonly r2Storage: R2StorageService,
   ) {}
+
+  /**
+   * 上传并解析文件 → 创建草稿文档
+   * 1. 拦截上传原文件并将原文件保存至 Cloudflare R2
+   * 2. 调用 FileParserService 提取文本并解析为 Markdown（DOCX 内图片也转存 R2）
+   * 3. 在 Postgres 与 Mongo 中创建文档记录并返回结构化数据与预览
+   */
+  async uploadAndCreateDocument(
+    file: Express.Multer.File,
+    meta: UploadParseDto = {},
+  ) {
+    if (!file?.buffer?.length) {
+      throw new BadRequestException('文件内容为空，无法解析');
+    }
+
+    const originalFilename = decodeUploadFilename(file.originalname);
+    const extension = getExtension(originalFilename);
+
+    if (!this.fileParserService.isSupported(extension)) {
+      throw new BadRequestException(
+        `不支持的文件格式: ${extension || '(无扩展名)'}，支持的格式: ${this.fileParserService.supportedList()}`,
+      );
+    }
+
+    this.logger.log(
+      `开始上传并解析文件：name=${originalFilename}, size=${file.size}, ext=${extension}`,
+    );
+
+    // 1. 解析文件生成 Markdown
+    let parsedContent: string;
+    try {
+      parsedContent = await this.fileParserService.parse({
+        originalname: originalFilename,
+        buffer: file.buffer,
+        size: file.size,
+      });
+    } catch (error) {
+      if (error instanceof BadRequestException) throw error;
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`文件解析失败：name=${originalFilename}, error=${message}`);
+      throw new BadRequestException(`文件解析失败: ${message}`);
+    }
+
+    // 2. 上传原始 DOCX 文件至 Cloudflare R2 归档
+    let fileUrl: string | null = null;
+    try {
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const key = `raw-documents/${dateStr}/${Date.now()}_${originalFilename}`;
+      fileUrl = await this.r2Storage.uploadFile(
+        file.buffer,
+        key,
+        file.mimetype || 'application/octet-stream',
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`原始文件上传 Cloudflare R2 失败：${message}`);
+      throw new BadRequestException(`原文件上传存储服务失败: ${message}`);
+    }
+
+    // 3. 确定标题并完成数据库落库
+    const title = meta.title?.trim() || titleFromFilename(originalFilename);
+
+    const created = await this.create({
+      ...meta,
+      title,
+      content: parsedContent,
+      status: meta.status ?? DocumentStatus.Draft,
+    });
+
+    const previewLen = Math.min(200, parsedContent.length);
+    const result = {
+      documentId: created.id,
+      title,
+      fileUrl,
+      fileSize: file.size,
+      fileExtension: extension,
+      contentLength: parsedContent.length,
+      contentPreview: parsedContent.slice(0, previewLen),
+      status: created.status,
+    };
+
+    this.logger.log(
+      `文件解析并创建文档成功：documentId=${created.id}, title=${title}, ext=${extension}, chars=${parsedContent.length}, fileUrl=${fileUrl}`,
+    );
+
+    return result;
+  }
 
   /**
    * 创建文档

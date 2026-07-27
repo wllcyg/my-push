@@ -30,11 +30,21 @@ async function bootstrap() {
   logger.log(`🌐 服务地址: ${serverUrl}`);
   logger.log('==================================================');
   logger.log('🛠️ 已挂载文档模块 (DocumentModule) 核心 API 路由列表：');
-  logger.log(`  [POST]   ${serverUrl}/documents       -> 创建文档 (雪花ID + 双库联动)`);
-  logger.log(`  [GET]    ${serverUrl}/documents       -> 分页与多条件筛选查询文档列表`);
-  logger.log(`  [GET]    ${serverUrl}/documents/:id   -> 查询文档详情 (含 Mongo Markdown 正文)`);
-  logger.log(`  [PATCH]  ${serverUrl}/documents/:id   -> 更新文档 (正文版本递增/元数据覆盖)`);
-  logger.log(`  [DELETE] ${serverUrl}/documents/:id   -> 软删除文档 (Postgres & Mongo 双侧逻辑删除)`);
+  logger.log(
+    `  [POST]   ${serverUrl}/documents       -> 创建文档 (雪花ID + 双库联动)`,
+  );
+  logger.log(
+    `  [GET]    ${serverUrl}/documents       -> 分页与多条件筛选查询文档列表`,
+  );
+  logger.log(
+    `  [GET]    ${serverUrl}/documents/:id   -> 查询文档详情 (含 Mongo Markdown 正文)`,
+  );
+  logger.log(
+    `  [PATCH]  ${serverUrl}/documents/:id   -> 更新文档 (正文版本递增/元数据覆盖)`,
+  );
+  logger.log(
+    `  [DELETE] ${serverUrl}/documents/:id   -> 软删除文档 (Postgres & Mongo 双侧逻辑删除)`,
+  );
   logger.log('==================================================');
 }
 
