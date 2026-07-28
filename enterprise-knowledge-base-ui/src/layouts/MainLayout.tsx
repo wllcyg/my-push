@@ -12,6 +12,7 @@ import {
   PlusOutlined,
   BookOutlined,
   AppstoreOutlined,
+  CloudUploadOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 
@@ -27,6 +28,11 @@ export const MainLayout: React.FC = () => {
       key: '/documents',
       icon: <FileTextOutlined className="text-indigo-500" />,
       label: '文档管理',
+    },
+    {
+      key: '/import',
+      icon: <CloudUploadOutlined className="text-blue-500" />,
+      label: '文件导入解析',
     },
     {
       key: '/dictionary',
@@ -52,6 +58,7 @@ export const MainLayout: React.FC = () => {
 
   const getBreadcrumbTitle = () => {
     if (location.pathname.includes('/editor')) return '在线编辑';
+    if (location.pathname.includes('/import')) return '文件导入解析';
     if (location.pathname.includes('/dictionary')) return '字典数据管理';
     if (location.pathname.includes('/categories')) return '分类空间';
     if (location.pathname.includes('/teams')) return '团队协作';
@@ -113,7 +120,15 @@ export const MainLayout: React.FC = () => {
             />
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Button
+              icon={<CloudUploadOutlined />}
+              onClick={() => navigate('/import')}
+              className="border-slate-300 text-slate-700 hover:text-indigo-600 hover:border-indigo-600 font-medium flex items-center"
+            >
+              导入文件
+            </Button>
+
             <Button
               type="primary"
               icon={<PlusOutlined />}

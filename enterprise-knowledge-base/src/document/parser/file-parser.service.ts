@@ -1,13 +1,18 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { R2StorageService } from '../../storage/r2-storage.service';
 import { parseDocx } from './parsers/docx.parse';
+import { parseXlsx } from './parsers/xlsx.parse';
+import { parseCsv } from './parsers/csv.parse';
 import { getExtension } from './utils/markdown.util';
 
-/** 支持解析的文件扩展名（当前先聚焦于 docx，后期可拓展 pdf/xlsx/pptx 等） */
+/** 支持解析的文件扩展名（当前聚焦于 docx/txt/md/xlsx/xls/csv，后期可拓展 pdf/pptx 等） */
 const SUPPORTED_EXTENSIONS = new Set([
   'docx',
   'txt',
   'md',
+  'xlsx',
+  'xls',
+  'csv',
 ]);
 
 export interface ParseInput {
@@ -67,6 +72,13 @@ export class FileParserService {
           uploadImage: (imageBuffer, contentType) =>
             this.r2Storage.uploadDocxImage(imageBuffer, contentType),
         });
+        break;
+      case 'xlsx':
+      case 'xls':
+        result = await parseXlsx(file.buffer);
+        break;
+      case 'csv':
+        result = await parseCsv(file.buffer);
         break;
       case 'txt':
       case 'md':

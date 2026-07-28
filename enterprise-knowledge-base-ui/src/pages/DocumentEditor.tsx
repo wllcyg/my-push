@@ -221,42 +221,30 @@ export const DocumentEditor: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* 左侧元数据配置与上传区 */}
           <div className="lg:col-span-1 space-y-6">
-            {/* 文件导入/解析拖拽区 */}
+            {/* 文件导入快捷入口 */}
             <Card
-              className="border border-slate-200 shadow-sm rounded-xl overflow-hidden"
+              className="border border-indigo-100 bg-indigo-50/40 shadow-sm rounded-xl overflow-hidden"
               title={
                 <div className="flex items-center gap-2 text-indigo-600 text-sm font-semibold">
                   <CloudUploadOutlined className="text-base" />
-                  <span>上传文件智能解析导入</span>
+                  <span>外部文件导入与解析</span>
                 </div>
               }
             >
-              <Upload.Dragger
-                name="file"
-                multiple={false}
-                showUploadList={false}
-                customRequest={handleCustomUpload}
-                disabled={uploading}
-                accept=".md,.txt,.pdf,.docx,.doc"
-                style={{
-                  background: '#f8fafc',
-                  border: '1px dashed #cbd5e1',
-                  borderRadius: '10px',
-                  padding: '12px',
-                }}
-              >
-                <div className="py-2">
-                  <p className="ant-upload-drag-icon text-indigo-500 text-3xl mb-2">
-                    {uploading ? <Spin /> : <InboxOutlined />}
-                  </p>
-                  <p className="text-slate-700 text-sm font-medium m-0">
-                    点击或拖拽本地文档至此处
-                  </p>
-                  <p className="text-slate-400 text-xs mt-1 mb-0">
-                    支持 Markdown (.md)、Word (.docx)、PDF、TXT 文件解析
-                  </p>
-                </div>
-              </Upload.Dragger>
+              <div className="py-2 text-center space-y-3">
+                <p className="text-slate-600 text-xs leading-relaxed m-0">
+                  需要从本地 CSV、Excel、Word、PDF 或 Markdown 文件一键批量解析生成文档？
+                </p>
+                <Button
+                  type="primary"
+                  ghost
+                  icon={<CloudUploadOutlined />}
+                  onClick={() => navigate('/import')}
+                  className="border-indigo-600 text-indigo-600 font-medium"
+                >
+                  前往【智能文件导入】页面
+                </Button>
+              </div>
             </Card>
 
             {/* 基本信息配置 */}

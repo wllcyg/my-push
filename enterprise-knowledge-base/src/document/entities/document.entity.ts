@@ -15,6 +15,10 @@ export enum DocumentStatus {
   Published = 1,
   /** 已归档：不会作为知识被检索 */
   Archived = 2,
+  /** 解析中：文件已入队，等待 Worker 异步解析 */
+  Parsing = 3,
+  /** 解析失败：可查看 remark 字段获取报错信息 */
+  Failed = 4,
 }
 
 /** 文档元数据（PostgreSQL kh_document） */
@@ -28,9 +32,9 @@ export class DocumentEntity {
   @Column({ type: 'varchar' })
   title: string;
 
-  /** MongoDB document_content._id */
-  @Column({ name: 'content_id', type: 'varchar', unique: true })
-  contentId: string;
+  /** MongoDB document_content._id（解析期间为 null，Consumer 回写） */
+  @Column({ name: 'content_id', type: 'varchar', unique: true, nullable: true })
+  contentId: string | null;
 
   /** 摘要 */
   @Column({ type: 'varchar', nullable: true })

@@ -4,7 +4,9 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } from '@aws-sdk/client-s3';
+import { Readable } from 'stream';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -87,6 +89,32 @@ export class R2StorageService implements OnModuleInit {
     const key = `docx-images/${dateStr}/${Date.now()}_${hash}.${ext}`;
 
     return this.uploadFile(buffer, key, contentType);
+  }
+
+  /**
+   * 从 Cloudflare R2 下载指定 Key 的文件，返回 Buffer
+   * 供 Consumer 异步解析时使用
+   */
+  async downloadFile(key: string): Promise<Buffer> {
+    try {
+      const command = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      });
+      const response = await this.s3Client.send(command);
+
+      // 将响应 Body（Readable Stream）转换为 Buffer
+      const stream = response.Body as Readable;
+      return await new Promise<Buffer>((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        stream.on('data', (chunk: Buffer) => chunks.push(chunk));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+      });
+    } catch (error) {
+      this.logger.error(`Failed to download file from R2 (Key: ${key})`, error);
+      throw error;
+    }
   }
 
   /**

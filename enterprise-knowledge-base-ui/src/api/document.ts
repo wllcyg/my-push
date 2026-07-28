@@ -129,7 +129,7 @@ export async function uploadAndParseDocument(formData: FormData): Promise<Upload
     headers: {
       'Content-Type': 'multipart/form-data',
     },
-    timeout: 60000, // 文件解析与 Cloudflare R2 云存储上传耗时较长，增加超时时间至 60 秒
+    timeout: 300000, // 大文件上传与 R2 归档耗时较长，增加超时时间至 5 分钟
   });
   return res.data;
 }

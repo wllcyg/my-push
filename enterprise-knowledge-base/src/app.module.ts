@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
+import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DocumentModule } from './document/document.module';
@@ -19,6 +20,27 @@ import { TagEntity } from './dictionary/entities/tag.entity';
       isGlobal: true,
       envFilePath: '.env',
     }),
+
+    // RabbitMQ 全局连接（基于 CloudAMQP，Topic Exchange）
+    {
+      ...RabbitMQModule.forRootAsync({
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (config: ConfigService) => ({
+          exchanges: [
+            {
+              name: 'knowledge.document.exchange',
+              type: 'topic',
+            },
+          ],
+          uri: config.get<string>('RABBITMQ_URL', ''),
+          // 启动时不阻塞等待 MQ 连接，避免 MQ 暂时不可用导致服务无法启动
+          connectionInitOptions: { wait: false },
+          enableControllerDiscovery: true,
+        }),
+      }),
+      global: true,
+    },
 
     // Cloudflare R2 / 对象存储模块
     StorageModule,

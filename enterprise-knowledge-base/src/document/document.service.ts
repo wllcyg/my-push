@@ -8,6 +8,7 @@ import { InjectEntityManager } from '@nestjs/typeorm';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EntityManager } from 'typeorm';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { nextSnowflakeId } from '../common/snowflake-id';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
@@ -29,6 +30,15 @@ import {
   titleFromFilename,
 } from './parser/utils/markdown.util';
 
+/** MQ 解析任务消息体结构 */
+export interface DocumentParseJobPayload {
+  documentId: string;
+  fileR2Key: string;
+  originalFilename: string;
+  mimetype: string;
+  title: string;
+}
+
 /**
  * 文档服务
  * - 元数据：PostgreSQL（kh_document）
@@ -38,6 +48,11 @@ import {
 @Injectable()
 export class DocumentService {
   private readonly logger = new Logger(DocumentService.name);
+
+  /** Topic Exchange 名称 */
+  static readonly EXCHANGE = 'knowledge.document.exchange';
+  /** 文档解析任务路由键 */
+  static readonly PARSE_ROUTING_KEY = 'kb.document.parse';
 
   constructor(
     /** Postgres 实体管理器 */
@@ -50,13 +65,18 @@ export class DocumentService {
     private readonly fileParserService: FileParserService,
     /** Cloudflare R2 对象存储服务 */
     private readonly r2Storage: R2StorageService,
+    /** RabbitMQ 连接（用于发布解析任务消息） */
+    private readonly amqpConnection: AmqpConnection,
   ) {}
 
   /**
-   * 上传并解析文件 → 创建草稿文档
-   * 1. 拦截上传原文件并将原文件保存至 Cloudflare R2
-   * 2. 调用 FileParserService 提取文本并解析为 Markdown（DOCX 内图片也转存 R2）
-   * 3. 在 Postgres 与 Mongo 中创建文档记录并返回结构化数据与预览
+   * 上传文件至 R2 并异步入队解析（不阻塞 HTTP 请求）
+   * 流程：
+   *   1. 校验文件格式
+   *   2. 上传原始文件至 Cloudflare R2 归档
+   *   3. Postgres 创建 status=Parsing 的占位记录（contentId = null）
+   *   4. 向 RabbitMQ 投递解析任务
+   *   5. 立即返回 documentId 与 Parsing 状态
    */
   async uploadAndCreateDocument(
     file: Express.Multer.File,
@@ -76,32 +96,17 @@ export class DocumentService {
     }
 
     this.logger.log(
-      `开始上传并解析文件：name=${originalFilename}, size=${file.size}, ext=${extension}`,
+      `开始上传文件入队：name=${originalFilename}, size=${file.size}, ext=${extension}`,
     );
 
-    // 1. 解析文件生成 Markdown
-    let parsedContent: string;
+    // Step 1：上传原始文件至 Cloudflare R2，获得 Key 和公网 URL
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const fileR2Key = `raw-documents/${dateStr}/${nextSnowflakeId()}_${originalFilename}`;
+    let fileUrl: string;
     try {
-      parsedContent = await this.fileParserService.parse({
-        originalname: originalFilename,
-        buffer: file.buffer,
-        size: file.size,
-      });
-    } catch (error) {
-      if (error instanceof BadRequestException) throw error;
-      const message = error instanceof Error ? error.message : String(error);
-      this.logger.error(`文件解析失败：name=${originalFilename}, error=${message}`);
-      throw new BadRequestException(`文件解析失败: ${message}`);
-    }
-
-    // 2. 上传原始 DOCX 文件至 Cloudflare R2 归档
-    let fileUrl: string | null = null;
-    try {
-      const dateStr = new Date().toISOString().slice(0, 10);
-      const key = `raw-documents/${dateStr}/${Date.now()}_${originalFilename}`;
       fileUrl = await this.r2Storage.uploadFile(
         file.buffer,
-        key,
+        fileR2Key,
         file.mimetype || 'application/octet-stream',
       );
     } catch (error) {
@@ -110,33 +115,113 @@ export class DocumentService {
       throw new BadRequestException(`原文件上传存储服务失败: ${message}`);
     }
 
-    // 3. 确定标题并完成数据库落库
+    // Step 2：Postgres 创建 Parsing 状态的占位记录（contentId 暂为 null）
     const title = meta.title?.trim() || titleFromFilename(originalFilename);
+    const doc = await this.createParsingDocument(title, fileUrl, meta);
 
-    const created = await this.create({
-      ...meta,
+    // Step 3：向 RabbitMQ 发布解析任务，Consumer 异步处理
+    const payload: DocumentParseJobPayload = {
+      documentId: doc.id,
+      fileR2Key,
+      originalFilename,
+      mimetype: file.mimetype || 'application/octet-stream',
       title,
-      content: parsedContent,
-      status: meta.status ?? DocumentStatus.Draft,
-    });
+    };
+    await this.amqpConnection.publish(
+      DocumentService.EXCHANGE,
+      DocumentService.PARSE_ROUTING_KEY,
+      payload,
+    );
 
-    const previewLen = Math.min(200, parsedContent.length);
-    const result = {
-      documentId: created.id,
+    this.logger.log(
+      `文件已上传并入队解析：documentId=${doc.id}, title=${title}, ext=${extension}, fileR2Key=${fileR2Key}`,
+    );
+
+    // Step 4：立即返回，不等待解析完成
+    return {
+      documentId: doc.id,
       title,
       fileUrl,
       fileSize: file.size,
       fileExtension: extension,
-      contentLength: parsedContent.length,
-      contentPreview: parsedContent.slice(0, previewLen),
-      status: created.status,
+      status: DocumentStatus.Parsing,
+      message: '文件已上传，后台正在异步解析中，请稍后刷新查看文档状态',
     };
+  }
 
-    this.logger.log(
-      `文件解析并创建文档成功：documentId=${created.id}, title=${title}, ext=${extension}, chars=${parsedContent.length}, fileUrl=${fileUrl}`,
+  /**
+   * 创建 Parsing 状态的占位文档记录（供 uploadAndCreateDocument 调用）
+   * contentId 为 null，待 Consumer 解析完成后回写
+   */
+  async createParsingDocument(
+    title: string,
+    fileUrl: string,
+    meta: UploadParseDto = {},
+  ): Promise<DocumentEntity> {
+    const id = nextSnowflakeId();
+    const doc = this.em.create(DocumentEntity, {
+      id,
+      title,
+      contentId: null,
+      summary: meta.summary ?? null,
+      categoryId: meta.categoryId ?? null,
+      teamId: meta.teamId ?? null,
+      authorId: meta.authorId ?? null,
+      coverImage: fileUrl,
+      tags: meta.tags ?? null,
+      status: DocumentStatus.Parsing,
+      remark: null,
+      isPublic: meta.isPublic ?? false,
+      wordCount: 0,
+      publishTime: null,
+      createBy: meta.createBy ?? null,
+      updateBy: meta.createBy ?? null,
+      deleted: false,
+    });
+    return this.em.save(doc);
+  }
+
+  /**
+   * Consumer 解析成功后回写：填充 contentId，字数，状态置为 Draft
+   */
+  async fulfillParsedContent(
+    documentId: string,
+    contentId: string,
+    wordCount: number,
+  ): Promise<void> {
+    await this.em.update(
+      DocumentEntity,
+      { id: documentId },
+      {
+        contentId,
+        wordCount,
+        status: DocumentStatus.Draft,
+      },
     );
+    this.logger.log(
+      `文档解析成功，已回写 contentId：documentId=${documentId}, contentId=${contentId}`,
+    );
+  }
 
-    return result;
+  /**
+   * Consumer 解析失败后标记：状态置为 Failed，记录报错信息
+   */
+  async markDocumentFailed(
+    documentId: string,
+    errorMessage: string,
+  ): Promise<void> {
+    await this.em.update(
+      DocumentEntity,
+      { id: documentId },
+      {
+        status: DocumentStatus.Failed,
+        // 截断防止超出 varchar 字段长度
+        remark: errorMessage.slice(0, 500),
+      },
+    );
+    this.logger.warn(
+      `文档解析失败，已标记 Failed：documentId=${documentId}, error=${errorMessage.slice(0, 100)}`,
+    );
   }
 
   /**

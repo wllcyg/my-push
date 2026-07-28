@@ -9,6 +9,7 @@ import {
   DocumentContent,
   DocumentContentSchema,
 } from './schemas/document-content.schema';
+import { DocumentParseConsumer } from './consumers/document-parse.consumer';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import {
     ]),
   ],
   controllers: [DocumentController],
-  providers: [DocumentService, FileParserService],
+  providers: [DocumentService, FileParserService, DocumentParseConsumer],
   exports: [DocumentService, FileParserService],
 })
 export class DocumentModule {}
+

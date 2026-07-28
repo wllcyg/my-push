@@ -51,11 +51,11 @@ export async function parseDocx(
       // 图片转换钩子：如果提供了 uploadImage（如 R2 上传）则上传并使用网络 URL
       convertImage: options?.uploadImage
         ? mammoth.images.imgElement(async (element) => {
-            const imageBuffer = await element.read();
-            const mimeType = element.contentType;
-            const publicUrl = await options.uploadImage!(imageBuffer, mimeType);
-            return { src: publicUrl };
-          })
+          const imageBuffer = await element.read();
+          const mimeType = element.contentType;
+          const publicUrl = await options.uploadImage!(imageBuffer, mimeType);
+          return { src: publicUrl };
+        })
         : options?.ignoreImages
           ? mammoth.images.imgElement(() => Promise.resolve({ src: '' }))
           : undefined,
