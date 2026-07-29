@@ -13,6 +13,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger('Exceptions');
 
   catch(exception: unknown, host: ArgumentsHost) {
+    // 忽略非 HTTP 上下文（如 RabbitMQ 消息消费 / RPC 调用的异常）
+    if (host.getType() !== 'http') {
+      this.logger.error(
+        `Unhandled Exception (${host.getType()}): ${(exception as Error)?.message || exception}`,
+        (exception as Error)?.stack,
+      );
+      throw exception;
+    }
+
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
@@ -31,15 +40,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // 结构化打印异常日志
     this.logger.error(
-      `Unhandled Exception: ${request.method} ${request.url} [Status: ${status}]`,
-      stack,
       {
+        message: `Unhandled Exception: ${request.method} ${request.url} [Status: ${status}]`,
         path: request.url,
         method: request.method,
         statusCode: status,
-        message,
+        errorMessage: message,
         ip: request.ip,
       },
+      stack,
+      'Exceptions',
     );
 
     const errorResponse = {

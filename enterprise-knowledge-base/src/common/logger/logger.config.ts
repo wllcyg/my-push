@@ -22,6 +22,23 @@ export const createLoggerOptions = (): WinstonModuleOptions => {
   const axiomDataset = process.env.AXIOM_DATASET;
   const axiomToken = process.env.AXIOM_TOKEN;
 
+  // 修复 @axiomhq/winston 1.8.0 官方包直接传输数组导致被序列化为 '[object Object]' 被 Axiom 拒收的 Bug
+  WinstonTransport.prototype.flush = async function () {
+    if (!this.batch || this.batch.length === 0) return;
+    const batchToSend = this.batch;
+    this.batch = [];
+    if (this.batchTimeoutId) {
+      clearTimeout(this.batchTimeoutId);
+      this.batchTimeoutId = undefined;
+    }
+    const payload = batchToSend.map((item: any) => JSON.stringify(item)).join('\n');
+    try {
+      await this.client.ingestRaw(this.dataset, payload, 'application/x-ndjson');
+    } catch (err) {
+      console.error('[AxiomTransport] Flush error:', err);
+    }
+  };
+
   if (axiomDataset && axiomToken) {
     transports.push(
       new WinstonTransport({

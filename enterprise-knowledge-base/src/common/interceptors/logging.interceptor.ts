@@ -15,12 +15,17 @@ export class LoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger('HTTP');
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    // 忽略非 HTTP 上下文（如 RabbitMQ 消息消费 / RPC 调用的情况）
+    if (context.getType() !== 'http') {
+      return next.handle();
+    }
+
     const ctx = context.switchToHttp();
     const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
 
     const { method, originalUrl, ip } = request;
-    const userAgent = request.get('user-agent') || '';
+    const userAgent = typeof request?.get === 'function' ? request.get('user-agent') || '' : '';
     const traceId = crypto.randomUUID().slice(0, 8);
     const startTime = Date.now();
 
@@ -31,8 +36,8 @@ export class LoggingInterceptor implements NestInterceptor {
           const statusCode = response.statusCode;
 
           this.logger.log(
-            `${method} ${originalUrl} ${statusCode} - ${duration}ms`,
             {
+              message: `${method} ${originalUrl} ${statusCode} - ${duration}ms`,
               traceId,
               method,
               url: originalUrl,
@@ -41,6 +46,7 @@ export class LoggingInterceptor implements NestInterceptor {
               ip,
               userAgent,
             },
+            'HTTP',
           );
         },
         error: (error) => {
@@ -48,9 +54,8 @@ export class LoggingInterceptor implements NestInterceptor {
           const statusCode = error.status || 500;
 
           this.logger.error(
-            `${method} ${originalUrl} ${statusCode} - ${duration}ms [Error: ${error.message}]`,
-            error.stack,
             {
+              message: `${method} ${originalUrl} ${statusCode} - ${duration}ms [Error: ${error.message}]`,
               traceId,
               method,
               url: originalUrl,
@@ -59,6 +64,8 @@ export class LoggingInterceptor implements NestInterceptor {
               ip,
               userAgent,
             },
+            error.stack,
+            'HTTP',
           );
         },
       }),
