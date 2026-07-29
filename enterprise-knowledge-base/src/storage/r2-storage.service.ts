@@ -6,8 +6,10 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
 } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Readable } from 'stream';
 import * as crypto from 'crypto';
+import { nextSnowflakeId } from '../common/snowflake-id';
 
 @Injectable()
 export class R2StorageService implements OnModuleInit {
@@ -41,6 +43,38 @@ export class R2StorageService implements OnModuleInit {
     });
 
     this.logger.log(`Initialized Cloudflare R2 Client (Endpoint: ${endpoint})`);
+  }
+
+  /**
+   * 生成供前端直传 Cloudflare R2 的预签名上传 URL (Presigned PUT URL)
+   * @param originalFilename 原始文件名
+   * @param contentType MIME 类型
+   * @param expiresIn 有效期（秒），默认 900 秒 (15 分钟)
+   */
+  async getPresignedUploadUrl(
+    originalFilename: string,
+    contentType: string,
+    expiresIn = 900,
+  ): Promise<{ uploadUrl: string; fileR2Key: string; fileUrl: string }> {
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const fileR2Key = `raw-documents/${dateStr}/${nextSnowflakeId()}_${originalFilename}`;
+
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: fileR2Key,
+      ContentType: contentType || 'application/octet-stream',
+    });
+
+    const uploadUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
+    const fileUrl = `${this.publicDomain}/${fileR2Key}`;
+
+    this.logger.log(`Generated R2 Presigned Upload URL for key: ${fileR2Key}`);
+
+    return {
+      uploadUrl,
+      fileR2Key,
+      fileUrl,
+    };
   }
 
   /**

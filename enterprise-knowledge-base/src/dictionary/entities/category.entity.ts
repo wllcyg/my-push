@@ -20,6 +20,6 @@ export class CategoryEntity {
   @Column({ type: 'varchar', nullable: true })
   remark?: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 }

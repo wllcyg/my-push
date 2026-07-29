@@ -70,23 +70,14 @@ export class DocumentService {
   ) {}
 
   /**
-   * 上传文件至 R2 并异步入队解析（不阻塞 HTTP 请求）
-   * 流程：
-   *   1. 校验文件格式
-   *   2. 上传原始文件至 Cloudflare R2 归档
-   *   3. Postgres 创建 status=Parsing 的占位记录（contentId = null）
-   *   4. 向 RabbitMQ 投递解析任务
-   *   5. 立即返回 documentId 与 Parsing 状态
+   * 接收前端直传 R2 后的元数据，在 Postgres 创建 Parsing 占位记录并异步入队 RabbitMQ 解析
    */
-  async uploadAndCreateDocument(
-    file: Express.Multer.File,
-    meta: UploadParseDto = {},
-  ) {
-    if (!file?.buffer?.length) {
-      throw new BadRequestException('文件内容为空，无法解析');
+  async uploadAndCreateDocument(dto: UploadParseDto) {
+    if (!dto.fileUrl || !dto.fileR2Key || !dto.originalFilename) {
+      throw new BadRequestException('缺失直传文件元数据信息 (fileUrl, fileR2Key, originalFilename)');
     }
 
-    const originalFilename = decodeUploadFilename(file.originalname);
+    const originalFilename = decodeUploadFilename(dto.originalFilename);
     const extension = getExtension(originalFilename);
 
     if (!this.fileParserService.isSupported(extension)) {
@@ -96,35 +87,18 @@ export class DocumentService {
     }
 
     this.logger.log(
-      `开始上传文件入队：name=${originalFilename}, size=${file.size}, ext=${extension}`,
+      `接收直传文件入队：name=${originalFilename}, ext=${extension}, fileR2Key=${dto.fileR2Key}`,
     );
 
-    // Step 1：上传原始文件至 Cloudflare R2，获得 Key 和公网 URL
-    const dateStr = new Date().toISOString().slice(0, 10);
-    const fileR2Key = `raw-documents/${dateStr}/${nextSnowflakeId()}_${originalFilename}`;
-    let fileUrl: string;
-    try {
-      fileUrl = await this.r2Storage.uploadFile(
-        file.buffer,
-        fileR2Key,
-        file.mimetype || 'application/octet-stream',
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.logger.error(`原始文件上传 Cloudflare R2 失败：${message}`);
-      throw new BadRequestException(`原文件上传存储服务失败: ${message}`);
-    }
+    const title = dto.title?.trim() || titleFromFilename(originalFilename);
+    const doc = await this.createParsingDocument(title, dto.fileUrl, dto);
 
-    // Step 2：Postgres 创建 Parsing 状态的占位记录（contentId 暂为 null）
-    const title = meta.title?.trim() || titleFromFilename(originalFilename);
-    const doc = await this.createParsingDocument(title, fileUrl, meta);
-
-    // Step 3：向 RabbitMQ 发布解析任务，Consumer 异步处理
+    // 向 RabbitMQ 发布解析任务，Consumer 异步处理
     const payload: DocumentParseJobPayload = {
       documentId: doc.id,
-      fileR2Key,
+      fileR2Key: dto.fileR2Key,
       originalFilename,
-      mimetype: file.mimetype || 'application/octet-stream',
+      mimetype: dto.mimetype || 'application/octet-stream',
       title,
     };
     await this.amqpConnection.publish(
@@ -134,18 +108,17 @@ export class DocumentService {
     );
 
     this.logger.log(
-      `文件已上传并入队解析：documentId=${doc.id}, title=${title}, ext=${extension}, fileR2Key=${fileR2Key}`,
+      `文件已入队解析：documentId=${doc.id}, title=${title}, ext=${extension}, fileR2Key=${dto.fileR2Key}`,
     );
 
-    // Step 4：立即返回，不等待解析完成
     return {
       documentId: doc.id,
       title,
-      fileUrl,
-      fileSize: file.size,
+      fileUrl: dto.fileUrl,
+      fileSize: dto.fileSize || 0,
       fileExtension: extension,
       status: DocumentStatus.Parsing,
-      message: '文件已上传，后台正在异步解析中，请稍后刷新查看文档状态',
+      message: '文件已直传，后台正在异步解析中，请稍后刷新查看文档状态',
     };
   }
 
@@ -156,7 +129,7 @@ export class DocumentService {
   async createParsingDocument(
     title: string,
     fileUrl: string,
-    meta: UploadParseDto = {},
+    meta: Partial<UploadParseDto> = {},
   ): Promise<DocumentEntity> {
     const id = nextSnowflakeId();
     const doc = this.em.create(DocumentEntity, {

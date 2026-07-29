@@ -111,6 +111,29 @@ export async function deleteDocument(id: string): Promise<{ id: string; deleted:
   return res.data;
 }
 
+/** R2 预签名 URL 响应接口 */
+export interface PresignedUrlResult {
+  uploadUrl: string;
+  fileR2Key: string;
+  fileUrl: string;
+}
+
+/** 直传解析后端 DTO */
+export interface UploadParsePayload {
+  fileUrl: string;
+  fileR2Key: string;
+  originalFilename: string;
+  mimetype?: string;
+  fileSize?: number;
+  title?: string;
+  summary?: string;
+  categoryId?: string;
+  teamId?: string;
+  coverImage?: string;
+  tags?: string;
+  isPublic?: boolean;
+}
+
 /** 上传解析响应接口 */
 export interface UploadParseResult {
   documentId: string;
@@ -118,19 +141,78 @@ export interface UploadParseResult {
   fileUrl: string | null;
   fileSize: number;
   fileExtension: string;
-  contentLength: number;
-  contentPreview: string;
   status: DocumentStatus;
+  message: string;
 }
 
-/** 上传文件并解析为 Markdown 文档草稿 */
-export async function uploadAndParseDocument(formData: FormData): Promise<UploadParseResult> {
-  const res = await api.post<UploadParseResult>('/documents/upload/parse', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-    timeout: 300000, // 大文件上传与 R2 归档耗时较长，增加超时时间至 5 分钟
+/** 获取 Cloudflare R2 直传预签名 URL */
+export async function getPresignedUrl(
+  filename: string,
+  contentType?: string,
+): Promise<PresignedUrlResult> {
+  const res = await api.post<PresignedUrlResult>('/storage/presigned-url', {
+    filename,
+    contentType: contentType || 'application/octet-stream',
   });
   return res.data;
+}
+
+/** 浏览器端直传文件二进制到 Cloudflare R2 */
+export async function uploadToR2Directly(
+  uploadUrl: string,
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<void> {
+  await axios.put(uploadUrl, file, {
+    headers: {
+      'Content-Type': file.type || 'application/octet-stream',
+    },
+    onUploadProgress: (progressEvent) => {
+      if (progressEvent.total) {
+        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        onProgress?.(percent);
+      }
+    },
+  });
+}
+
+/** 提交直传后的元数据至后端创建占位文档并入队 MQ 解析 */
+export async function submitDirectUploadParse(
+  data: UploadParsePayload,
+): Promise<UploadParseResult> {
+  const res = await api.post<UploadParseResult>('/documents/upload/parse', data);
+  return res.data;
+}
+
+/**
+ * 前端直传 R2 并提交 MQ 异步解析封装方法
+ */
+export async function uploadAndParseDocument(
+  file: File,
+  meta: Partial<UploadParsePayload> = {},
+  onProgress?: (stepText: string, percent?: number) => void,
+): Promise<UploadParseResult> {
+  // Step 1: 申请预签名链接
+  onProgress?.('获取预签名链接中...');
+  const { uploadUrl, fileR2Key, fileUrl } = await getPresignedUrl(file.name, file.type);
+
+  // Step 2: 浏览器直传 R2 存储
+  onProgress?.('直传 R2 存储中...', 0);
+  await uploadToR2Directly(uploadUrl, file, (percent) => {
+    onProgress?.(`直传 R2 存储中... (${percent}%)`, percent);
+  });
+
+  // Step 3: 提交后端入队 MQ
+  onProgress?.('投递 MQ 解析任务中...');
+  const payload: UploadParsePayload = {
+    ...meta,
+    fileUrl,
+    fileR2Key,
+    originalFilename: file.name,
+    mimetype: file.type || 'application/octet-stream',
+    fileSize: file.size,
+  };
+
+  return await submitDirectUploadParse(payload);
 }
 

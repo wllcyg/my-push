@@ -20,6 +20,6 @@ export class TagEntity {
   @Column({ name: 'quote_count', type: 'int', default: 0 })
   quoteCount: number;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 }

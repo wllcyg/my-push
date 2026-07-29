@@ -1,9 +1,31 @@
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { DocumentStatus } from '../entities/document.entity';
 
-/** 上传解析接口的可选表单字段 */
+/** 前端直传 R2 后的提交解析接口 DTO */
 export class UploadParseDto {
+  /** 云端对象存储公网访问 URL */
+  @IsString()
+  fileUrl!: string;
+
+  /** 云端对象存储 Key */
+  @IsString()
+  fileR2Key!: string;
+
+  /** 原始文件名 */
+  @IsString()
+  originalFilename!: string;
+
+  /** MIME 类型 */
+  @IsOptional()
+  @IsString()
+  mimetype?: string;
+
+  /** 文件字节大小 */
+  @IsOptional()
+  @IsNumber()
+  fileSize?: number;
+
   /** 自定义标题（可选，不传时自动从文件名推导去除后缀的标题） */
   @IsOptional()
   @IsString()

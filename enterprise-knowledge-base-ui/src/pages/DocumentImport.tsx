@@ -37,6 +37,7 @@ export const DocumentImport: React.FC = () => {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [progressText, setProgressText] = useState('');
   const [parseResult, setParseResult] = useState<UploadParseResult | null>(null);
 
   // 1. 加载分类字典
@@ -57,7 +58,7 @@ export const DocumentImport: React.FC = () => {
     queryFn: getTags,
   });
 
-  // 处理提交表单与文件上传
+  // 处理提交表单与文件直传上传
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -67,32 +68,38 @@ export const DocumentImport: React.FC = () => {
       }
 
       setSubmitting(true);
+      setProgressText('初始化上传请求...');
       const rawFile = fileList[0].originFileObj || fileList[0];
 
-      const formData = new FormData();
-      formData.append('file', rawFile);
+      const tagsStr = values.tags
+        ? Array.isArray(values.tags)
+          ? values.tags.join(',')
+          : values.tags
+        : undefined;
 
-      if (values.title) formData.append('title', values.title.trim());
-      if (values.summary) formData.append('summary', values.summary.trim());
-      if (values.categoryId) formData.append('categoryId', values.categoryId);
-      if (values.teamId) formData.append('teamId', values.teamId);
-      if (values.coverUrl) formData.append('coverUrl', values.coverUrl.trim());
-      if (values.isPublic !== undefined) formData.append('isPublic', String(values.isPublic));
+      const meta = {
+        title: values.title?.trim(),
+        summary: values.summary?.trim(),
+        categoryId: values.categoryId,
+        teamId: values.teamId,
+        coverImage: values.coverUrl?.trim(),
+        isPublic: values.isPublic,
+        tags: tagsStr,
+      };
 
-      if (values.tags) {
-        const tagsStr = Array.isArray(values.tags) ? values.tags.join(',') : values.tags;
-        formData.append('tags', tagsStr);
-      }
+      // 执行端到端直传 R2 + 投递 MQ
+      const res = await uploadAndParseDocument(rawFile, meta, (stepText) => {
+        setProgressText(stepText);
+      });
 
-      // 发起 MQ 异步投递解析请求
-      const res = await uploadAndParseDocument(formData);
       setParseResult(res);
-      message.success('文件上传成功，已投递至 RabbitMQ 队列进入后台解析！');
+      message.success('文件直传 R2 成功，解析任务已发布至 MQ 队列！');
     } catch (err: any) {
       const errMsg = err?.response?.data?.message || err.message || '上传处理失败';
       message.error(`提交失败: ${errMsg}`);
     } finally {
       setSubmitting(false);
+      setProgressText('');
     }
   };
 
@@ -320,8 +327,8 @@ export const DocumentImport: React.FC = () => {
               </Upload.Dragger>
 
               <Alert
-                message="MQ 异步协同解析机制"
-                description="文件上传后将立即存入 Cloudflare R2，并向 RabbitMQ 发送异步任务。您无需在页面等待，可随时离开。"
+                message="R2 存储直传 & MQ 异步协同机制"
+                description="文件通过 R2 预签名凭证直传至对象存储，不占用服务器中转带宽；上传完成后自动触发 RabbitMQ 后台解析。"
                 type="info"
                 showIcon
                 className="mt-4 border-indigo-100 bg-indigo-50/50 text-xs"
@@ -337,7 +344,7 @@ export const DocumentImport: React.FC = () => {
                   onClick={handleSubmit}
                   className="bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-200 font-semibold h-11"
                 >
-                  {submitting ? '提交入队中...' : '提交并开始后台解析'}
+                  {submitting ? progressText || '正在处理中...' : '直传 R2 存储并开始后台解析'}
                 </Button>
               </div>
             </Card>

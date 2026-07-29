@@ -130,16 +130,15 @@ export const DocumentEditor: React.FC = () => {
     const { file, onSuccess, onError } = options;
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file as File);
-
       // 如果当前表单已有选中值，一起发给后端
       const currentValues = form.getFieldsValue();
-      if (currentValues.categoryId) formData.append('categoryId', currentValues.categoryId);
-      if (currentValues.teamId) formData.append('teamId', currentValues.teamId);
+      const meta = {
+        categoryId: currentValues.categoryId,
+        teamId: currentValues.teamId,
+      };
 
-      // 1. 调用上传解析（后端会自动落库并存入 R2 + Mongo + Postgres）
-      const uploadRes = await uploadAndParseDocument(formData);
+      // 1. 调用直传 R2 解析流程
+      const uploadRes = await uploadAndParseDocument(file as File, meta);
 
       // 2. 根据返回的 documentId 查询完整文档详情 (包含完整 Markdown 正文)
       const fullDoc = await getDocumentDetail(uploadRes.documentId);

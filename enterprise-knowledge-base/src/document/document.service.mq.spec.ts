@@ -67,31 +67,29 @@ describe('DocumentService - MQ 异步相关方法', () => {
   // uploadAndCreateDocument
   // ─────────────────────────────────────────────
   describe('uploadAndCreateDocument', () => {
-    const fakeFile = {
-      buffer: Buffer.from('fake file content'),
-      originalname: 'report.docx',
-      size: 1024,
+    const fakeDto = {
+      fileUrl: 'https://cdn.example.com/raw-documents/2026-07-28/xxx_report.docx',
+      fileR2Key: 'raw-documents/2026-07-28/xxx_report.docx',
+      originalFilename: 'report.docx',
+      fileSize: 1024,
       mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    } as Express.Multer.File;
+      title: '年度报告',
+    };
 
-    it('应上传 R2 → 创建 Parsing 记录 → 投递 MQ → 立即返回', async () => {
+    it('应基于直传元数据创建 Parsing 记录 → 投递 MQ → 立即返回', async () => {
       mockFileParserService.isSupported.mockReturnValue(true);
-      mockR2Storage.uploadFile.mockResolvedValue('https://cdn.example.com/raw-documents/2026-07-28/xxx_report.docx');
 
       const fakeSavedDoc = { id: '987654321', status: DocumentStatus.Parsing };
       mockEntityManager.create.mockReturnValue(fakeSavedDoc);
       mockEntityManager.save.mockResolvedValue(fakeSavedDoc);
       mockAmqpConnection.publish.mockResolvedValue(undefined);
 
-      const result = await service.uploadAndCreateDocument(fakeFile, { title: '年度报告' });
+      const result = await service.uploadAndCreateDocument(fakeDto);
 
       // 应立即返回 Parsing 状态
       expect(result.status).toBe(DocumentStatus.Parsing);
       expect(result.documentId).toBe('987654321');
       expect(result.message).toContain('异步解析');
-
-      // R2 上传被调用
-      expect(mockR2Storage.uploadFile).toHaveBeenCalledTimes(1);
 
       // MQ 发布被调用，且携带正确的 Exchange 和 RoutingKey
       expect(mockAmqpConnection.publish).toHaveBeenCalledWith(
@@ -100,6 +98,7 @@ describe('DocumentService - MQ 异步相关方法', () => {
         expect.objectContaining({
           documentId: '987654321',
           originalFilename: 'report.docx',
+          fileR2Key: 'raw-documents/2026-07-28/xxx_report.docx',
         }),
       );
     });
@@ -109,33 +108,21 @@ describe('DocumentService - MQ 异步相关方法', () => {
 
       await expect(
         service.uploadAndCreateDocument({
-          ...fakeFile,
-          originalname: 'unknown.xyz',
-        } as Express.Multer.File),
+          ...fakeDto,
+          originalFilename: 'unknown.xyz',
+        }),
       ).rejects.toThrow(BadRequestException);
 
-      // 不应触发上传和 MQ
-      expect(mockR2Storage.uploadFile).not.toHaveBeenCalled();
       expect(mockAmqpConnection.publish).not.toHaveBeenCalled();
     });
 
-    it('文件 Buffer 为空时应抛出 BadRequestException', async () => {
+    it('缺失直传核心元数据时应抛出 BadRequestException', async () => {
       await expect(
         service.uploadAndCreateDocument({
-          ...fakeFile,
-          buffer: Buffer.alloc(0),
-        } as Express.Multer.File),
+          ...fakeDto,
+          fileUrl: '',
+        }),
       ).rejects.toThrow(BadRequestException);
-    });
-
-    it('R2 上传失败时应抛出 BadRequestException，不应投递 MQ', async () => {
-      mockFileParserService.isSupported.mockReturnValue(true);
-      mockR2Storage.uploadFile.mockRejectedValue(new Error('S3 连接超时'));
-
-      await expect(service.uploadAndCreateDocument(fakeFile)).rejects.toThrow(
-        BadRequestException,
-      );
-      expect(mockAmqpConnection.publish).not.toHaveBeenCalled();
     });
   });
 

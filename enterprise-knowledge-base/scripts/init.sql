@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS kh_category (
     name VARCHAR NOT NULL,
     code VARCHAR NOT NULL UNIQUE,
     remark VARCHAR,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- 预置分类字典初始数据
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS kh_team (
     name VARCHAR NOT NULL,
     code VARCHAR NOT NULL UNIQUE,
     remark VARCHAR,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- 预置团队字典初始数据
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS kh_tag (
     name VARCHAR NOT NULL UNIQUE,
     color VARCHAR DEFAULT '#108ee9',
     quote_count INT NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- 预置标签字典初始数据
@@ -70,10 +70,10 @@ CREATE TABLE IF NOT EXISTS kh_document (
     comment_count INT NOT NULL DEFAULT 0,
     favourite_count INT NOT NULL DEFAULT 0,
     word_count INT NOT NULL DEFAULT 0,
-    publish_time TIMESTAMP,
+    publish_time TIMESTAMPTZ,
     is_public BOOLEAN NOT NULL DEFAULT false,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     create_by BIGINT,
     update_by BIGINT,
     deleted BOOLEAN NOT NULL DEFAULT false

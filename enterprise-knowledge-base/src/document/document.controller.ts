@@ -29,21 +29,10 @@ export class DocumentController {
     return this.documentService.create(dto);
   }
 
-  /** 上传文件并解析为 Markdown，创建草稿（form-data 字段名: file） */
+  /** 前端直传 R2 后的文档解析申请 */
   @Post('upload/parse')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
-    }),
-  )
-  uploadAndParse(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() meta: UploadParseDto,
-  ) {
-    if (!file) {
-      throw new BadRequestException('请上传文件（form-data 字段名: file）');
-    }
-    return this.documentService.uploadAndCreateDocument(file, meta);
+  uploadAndParse(@Body() dto: UploadParseDto) {
+    return this.documentService.uploadAndCreateDocument(dto);
   }
 
   /** 分页查询文档列表（仅元数据） */
