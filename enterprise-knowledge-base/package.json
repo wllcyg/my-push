@@ -26,6 +26,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1095.0",
     "@aws-sdk/s3-request-presigner": "^3.1097.0",
+    "@axiomhq/winston": "^1.8.0",
     "@golevelup/nestjs-rabbitmq": "^9.0.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
@@ -43,12 +44,14 @@
     "mammoth": "^1.12.0",
     "mongodb": "^7.5.0",
     "mongoose": "^9.8.0",
+    "nest-winston": "^1.10.2",
     "pg": "^8.22.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "turndown": "^7.2.4",
     "turndown-plugin-gfm": "^1.0.2",
-    "typeorm": "^1.1.0"
+    "typeorm": "^1.1.0",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

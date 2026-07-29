@@ -1,10 +1,20 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { WinstonModule } from 'nest-winston';
 import { AppModule } from './app.module';
+import { createLoggerOptions } from './common/logger/logger.config';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: WinstonModule.createLogger(createLoggerOptions()),
+  });
+
+  // 全局挂载 HTTP 日志拦截器与全量异常过滤器
+  app.useGlobalInterceptors(new LoggingInterceptor());
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // 开启全局 DTO 参数校验与转换（字符串自动转数字、自动剥离多余字段）
   app.useGlobalPipes(
