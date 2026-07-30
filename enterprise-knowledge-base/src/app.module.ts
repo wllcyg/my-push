@@ -1,8 +1,13 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
+import { CacheModule } from '@nestjs/cache-manager';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
+import { DataSource } from 'typeorm';
+import { addTransactionalDataSource } from 'typeorm-transactional';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DocumentModule } from './document/document.module';
@@ -19,6 +24,21 @@ import { TagEntity } from './dictionary/entities/tag.entity';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+    }),
+
+    // 全局接口限流防护 (默认: 单 IP 60秒内最多 120 次请求)
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 120,
+      },
+    ]),
+
+    // 全局缓存层配置 (TTL 10 分钟，最多 1000 条热点数据)
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 600000,
+      max: 1000,
     }),
 
     // RabbitMQ 全局连接（基于 CloudAMQP，Topic Exchange）
@@ -45,7 +65,7 @@ import { TagEntity } from './dictionary/entities/tag.entity';
     // Cloudflare R2 / 对象存储模块
     StorageModule,
 
-    // PostgreSQL + TypeORM 根连接
+    // PostgreSQL + TypeORM 根连接 (配合 typeorm-transactional)
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -62,6 +82,12 @@ import { TagEntity } from './dictionary/entities/tag.entity';
         entities: [DocumentEntity, CategoryEntity, TeamEntity, TagEntity],
         synchronize: false,
       }),
+      async dataSourceFactory(options) {
+        if (!options) {
+          throw new Error('Invalid options passed to dataSourceFactory');
+        }
+        return addTransactionalDataSource(new DataSource(options));
+      },
     }),
 
     // MongoDB + Mongoose 根连接
@@ -80,6 +106,13 @@ import { TagEntity } from './dictionary/entities/tag.entity';
     DictionaryModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // 全局挂载限流拦截 Guard
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

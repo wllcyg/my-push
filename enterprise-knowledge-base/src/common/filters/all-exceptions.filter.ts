@@ -38,19 +38,21 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const stack = (exception as Error)?.stack;
 
-    // 结构化打印异常日志
-    this.logger.error(
-      {
-        message: `Unhandled Exception: ${request.method} ${request.url} [Status: ${status}]`,
-        path: request.url,
-        method: request.method,
-        statusCode: status,
-        errorMessage: message,
-        ip: request.ip,
-      },
-      stack,
-      'Exceptions',
-    );
+    // 结构化打印异常日志：4xx 记为 warn 告警，5xx 记为 error 堆栈报错
+    const logPayload = {
+      message: `HTTP Exception: ${request.method} ${request.url} [Status: ${status}]`,
+      path: request.url,
+      method: request.method,
+      statusCode: status,
+      errorMessage: message,
+      ip: request.ip,
+    };
+
+    if (status >= 500) {
+      this.logger.error(logPayload, stack, 'Exceptions');
+    } else {
+      this.logger.warn(logPayload, 'Exceptions');
+    }
 
     const errorResponse = {
       statusCode: status,

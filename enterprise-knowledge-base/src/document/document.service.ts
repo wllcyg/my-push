@@ -3,11 +3,15 @@ import {
   NotFoundException,
   BadRequestException,
   Logger,
+  Inject,
 } from '@nestjs/common';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { InjectModel } from '@nestjs/mongoose';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { Model } from 'mongoose';
 import { EntityManager } from 'typeorm';
+import { Transactional } from 'typeorm-transactional';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { nextSnowflakeId } from '../common/snowflake-id';
 import { CreateDocumentDto } from './dto/create-document.dto';
@@ -61,6 +65,9 @@ export class DocumentService {
     /** Mongo 正文模型 */
     @InjectModel(DocumentContent.name)
     private readonly contentModel: Model<DocumentContentDocument>,
+    /** 全局缓存管理器 */
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: any,
     /** 文件解析服务 */
     private readonly fileParserService: FileParserService,
     /** Cloudflare R2 对象存储服务 */
@@ -198,10 +205,11 @@ export class DocumentService {
   }
 
   /**
-   * 创建文档
-   * 流程：生成雪花 ID → 写 Mongo 正文（拿 ObjectId）→ 写 Postgres 元数据
-   * 若 Postgres 写入失败，回滚删除已写入的 Mongo 正文，避免脏数据
+   * 创建文档 (@Transactional 声明式事务)
+   * 流程：生成雪花 ID → 写 Mongo 正文 → 开启 Postgres 事务写元数据
+   * 若发生异常，自动触发事务 ROLLBACK，并原子清理已写入的 Mongo 正文
    */
+  @Transactional()
   async create(dto: CreateDocumentDto) {
     const id = nextSnowflakeId();
     const wordCount = this.countWords(dto.content);
@@ -238,7 +246,8 @@ export class DocumentService {
         isPublic: dto.isPublic ?? false,
         wordCount,
         // 创建即发布时，记录发布时间
-        publishTime: status === DocumentStatus.Published ? new Date() : null,
+        publishTime:
+          status === DocumentStatus.Published ? new Date() : null,
         createBy: dto.createBy,
         updateBy: dto.createBy,
         deleted: false,
@@ -247,8 +256,11 @@ export class DocumentService {
       const saved = await this.em.save(doc);
       return { ...saved, content: dto.content };
     } catch (error) {
-      // Postgres 失败：物理删除刚写入的 Mongo 正文
+      // Postgres 事务失败：原子回滚删除刚写入的 Mongo 正文
       await this.contentModel.deleteOne({ _id: contentDoc._id });
+      this.logger.error(
+        `创建文档写 Postgres 事务失败，已原子回滚清理 Mongo 数据: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -301,10 +313,17 @@ export class DocumentService {
   }
 
   /**
-   * 查询文档详情
+   * 查询文档详情 (Cache-Aside 旁路缓存模式)
    * @param withContent 是否附带 Mongo 正文，默认 true
    */
   async findOne(id: string, withContent = true) {
+    const cacheKey = `doc:detail:${id}:${withContent}`;
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) {
+      this.logger.debug(`⚡ [Cache Hit] 命中文档详情缓存: key=${cacheKey}`);
+      return cached;
+    }
+
     const doc = await this.em.findOne(DocumentEntity, {
       where: { id, deleted: false },
     });
@@ -312,27 +331,31 @@ export class DocumentService {
       throw new NotFoundException(`Document ${id} not found`);
     }
 
-    if (!withContent) {
-      return doc;
+    let result: any = doc;
+    if (withContent) {
+      // 通过 content_id 拉取未删除的正文
+      const contentDoc = await this.contentModel
+        .findOne({ _id: doc.contentId, deleted: false })
+        .lean();
+      result = {
+        ...doc,
+        content: contentDoc?.content ?? '',
+      };
     }
 
-    // 通过 content_id 拉取未删除的正文
-    const contentDoc = await this.contentModel
-      .findOne({ _id: doc.contentId, deleted: false })
-      .lean();
-    return {
-      ...doc,
-      content: contentDoc?.content ?? '',
-    };
+    // 写入全局缓存 (有效期 10 分钟 = 600,000 ms)
+    await this.cacheManager.set(cacheKey, result, 600000);
+    return result;
   }
 
   /**
-   * 更新文档
+   * 更新文档 (@Transactional 声明式事务 + 缓存主动失效)
    * - 有 content：同步更新 Mongo 正文，并递增 version
    * - 仅改 summary：同步更新 Mongo contentSummary
    * - 其余字段只更新 Postgres 元数据
    * - 首次变为「已发布」时写入 publishTime
    */
+  @Transactional()
   async update(id: string, dto: UpdateDocumentDto) {
     const doc = await this.em.findOne(DocumentEntity, {
       where: { id, deleted: false },
@@ -395,6 +418,10 @@ export class DocumentService {
 
     const saved = await this.em.save(doc);
 
+    // 主动清除对应文档的缓存 (Cache Invalidation)
+    await this.cacheManager.del(`doc:detail:${id}:true`);
+    await this.cacheManager.del(`doc:detail:${id}:false`);
+
     // 本次已带新正文则直接返回；否则再查一次 Mongo
     if (dto.content !== undefined) {
       return { ...saved, content: dto.content };
@@ -407,9 +434,10 @@ export class DocumentService {
   }
 
   /**
-   * 软删除文档
-   * Postgres、Mongo 两侧都将 deleted 置为 true（不物理删正文）
+   * 软删除文档 (@Transactional 声明式事务 + 缓存主动失效)
+   * Postgres、Mongo 两侧都将 deleted 置为 true
    */
+  @Transactional()
   async remove(id: string) {
     const doc = await this.em.findOne(DocumentEntity, {
       where: { id, deleted: false },
@@ -424,6 +452,11 @@ export class DocumentService {
       { _id: doc.contentId },
       { $set: { deleted: true } },
     );
+
+    // 主动清除关联缓存 (Cache Invalidation)
+    await this.cacheManager.del(`doc:detail:${id}:true`);
+    await this.cacheManager.del(`doc:detail:${id}:false`);
+
     return { id, deleted: true };
   }
 

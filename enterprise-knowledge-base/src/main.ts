@@ -1,13 +1,18 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+import { initializeTransactionalContext } from 'typeorm-transactional';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WinstonModule } from 'nest-winston';
 import { AppModule } from './app.module';
 import { createLoggerOptions } from './common/logger/logger.config';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+
+// 初始化 typeorm-transactional 异步上下文 (AsyncLocalStorage)
+initializeTransactionalContext();
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -31,6 +36,24 @@ async function bootstrap() {
   // 开启跨域 CORS 支持
   app.enableCors();
 
+  // 配置 Swagger OpenAPI 接口文档（带生产环境隔离保护）
+  const isProduction = process.env.NODE_ENV === 'production';
+  const swaggerPath = 'api-docs';
+
+  if (!isProduction) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('企业级知识库后端服务 API')
+      .setDescription(
+        '基于 NestJS + PostgreSQL (pgvector) + MongoDB 的企业知识库后端服务接口文档',
+      )
+      .setVersion('1.0.0')
+      .addBearerAuth()
+      .build();
+
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup(swaggerPath, app, document);
+  }
+
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
 
@@ -41,6 +64,11 @@ async function bootstrap() {
   logger.log('🚀 企业级知识库后端服务 (Enterprise Knowledge Base) 启动成功！');
   logger.log(`📌 运行端口: ${port}`);
   logger.log(`🌐 服务地址: ${serverUrl}`);
+  if (!isProduction) {
+    logger.log(`📚 Swagger 文档地址: ${serverUrl}/${swaggerPath}`);
+  } else {
+    logger.log(`🔒 生产环境安全防护: Swagger API 文档已被自动禁用`);
+  }
   logger.log('==================================================');
   logger.log('🛠️ 已挂载文档模块 (DocumentModule) 核心 API 路由列表：');
   logger.log(
