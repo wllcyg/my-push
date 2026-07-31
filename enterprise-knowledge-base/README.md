@@ -91,3 +91,4 @@ enterprise-knowledge-base/
 
 [MIT licensed](LICENSE)
 
+delop
