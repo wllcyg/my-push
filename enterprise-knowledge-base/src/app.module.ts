@@ -15,6 +15,7 @@ import { DocumentModule } from './document/document.module';
 import { StorageModule } from './storage/storage.module';
 import { DictionaryModule } from './dictionary/dictionary.module';
 import { DocumentEntity } from './document/entities/document.entity';
+import { DocumentChunkEntity } from './document/entities/document-chunk.entity';
 import { CategoryEntity } from './dictionary/entities/category.entity';
 import { TeamEntity } from './dictionary/entities/team.entity';
 import { TagEntity } from './dictionary/entities/tag.entity';
@@ -91,7 +92,13 @@ import { TagEntity } from './dictionary/entities/tag.entity';
         ssl: config.get<string>('POSTGRES_HOST')?.includes('supabase')
           ? { rejectUnauthorized: false }
           : false,
-        entities: [DocumentEntity, CategoryEntity, TeamEntity, TagEntity],
+        entities: [
+          DocumentEntity,
+          DocumentChunkEntity,
+          CategoryEntity,
+          TeamEntity,
+          TagEntity,
+        ],
         synchronize: false,
       }),
       async dataSourceFactory(options) {
