@@ -59,34 +59,11 @@ async function bootstrap() {
 
   const serverUrl = `http://localhost:${port}`;
 
-  // 美化控制台启动输出与核心路由打印
-  logger.log('==================================================');
-  logger.log('🚀 企业级知识库后端服务 (Enterprise Knowledge Base) 启动成功！');
-  logger.log(`📌 运行端口: ${port}`);
-  logger.log(`🌐 服务地址: ${serverUrl}`);
+  // 极简控制台启动日志输出
+  logger.log(`🚀 服务启动成功 | 运行地址: ${serverUrl}`);
   if (!isProduction) {
     logger.log(`📚 Swagger 文档地址: ${serverUrl}/${swaggerPath}`);
-  } else {
-    logger.log(`🔒 生产环境安全防护: Swagger API 文档已被自动禁用`);
   }
-  logger.log('==================================================');
-  logger.log('🛠️ 已挂载文档模块 (DocumentModule) 核心 API 路由列表：');
-  logger.log(
-    `  [POST]   ${serverUrl}/documents       -> 创建文档 (雪花ID + 双库联动)`,
-  );
-  logger.log(
-    `  [GET]    ${serverUrl}/documents       -> 分页与多条件筛选查询文档列表`,
-  );
-  logger.log(
-    `  [GET]    ${serverUrl}/documents/:id   -> 查询文档详情 (含 Mongo Markdown 正文)`,
-  );
-  logger.log(
-    `  [PATCH]  ${serverUrl}/documents/:id   -> 更新文档 (正文版本递增/元数据覆盖)`,
-  );
-  logger.log(
-    `  [DELETE] ${serverUrl}/documents/:id   -> 软删除文档 (Postgres & Mongo 双侧逻辑删除)`,
-  );
-  logger.log('==================================================');
 }
 
 bootstrap();

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
+import { AmqpConnection, RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
@@ -10,12 +10,13 @@ import { FileParserService } from '../parser/file-parser.service';
 import { R2StorageService } from '../../storage/r2-storage.service';
 import { DocumentService } from '../document.service';
 import type { DocumentParseJobPayload } from '../document.service';
+import { DocumentVectorConsumer } from './document-vector.consumer';
 
 /**
  * 文档解析异步消费者
  *
  * 监听 RabbitMQ Topic Exchange 上的 kb.document.parse 路由键
- * 职责：从 R2 下载原始文件 → 解析为 Markdown → 写 Mongo → 回写 Postgres
+ * 职责：从 R2 下载原始文件 → 解析为 Markdown → 写 Mongo → 回写 Postgres → 触发向量化
  */
 @Injectable()
 export class DocumentParseConsumer {
@@ -27,6 +28,7 @@ export class DocumentParseConsumer {
     private readonly fileParserService: FileParserService,
     private readonly r2Storage: R2StorageService,
     private readonly documentService: DocumentService,
+    private readonly amqpConnection: AmqpConnection,
   ) {}
 
   @RabbitSubscribe({
@@ -100,8 +102,15 @@ export class DocumentParseConsumer {
         wordCount,
       );
 
+      // Step 5：向 RabbitMQ 投递 kb.document.vectorize 消息，触发异步文本切片与向量化
+      await this.amqpConnection.publish(
+        DocumentService.EXCHANGE,
+        DocumentVectorConsumer.VECTOR_ROUTING_KEY,
+        { documentId, contentId },
+      );
+
       this.logger.log(
-        `[MQ Consumer] 文档解析入库完成：documentId=${documentId}, contentId=${contentId}, words=${wordCount}`,
+        `[MQ Consumer] 文档解析入库完成，已投递向量化任务：documentId=${documentId}, contentId=${contentId}, words=${wordCount}`,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
