@@ -100,7 +100,7 @@ export class DocumentService {
     const title = dto.title?.trim() || titleFromFilename(originalFilename);
     const doc = await this.createParsingDocument(title, dto.fileUrl, dto);
 
-    // 向 RabbitMQ 发布解析任务，Consumer 异步处理
+    // 向 RabbitMQ 发布解析任务，若 MQ 异常或不可用则自动触发本地后台异步降级解析
     const payload: DocumentParseJobPayload = {
       documentId: doc.id,
       fileR2Key: dto.fileR2Key,
@@ -108,15 +108,23 @@ export class DocumentService {
       mimetype: dto.mimetype || 'application/octet-stream',
       title,
     };
-    await this.amqpConnection.publish(
-      DocumentService.EXCHANGE,
-      DocumentService.PARSE_ROUTING_KEY,
-      payload,
-    );
-
-    this.logger.log(
-      `文件已入队解析：documentId=${doc.id}, title=${title}, ext=${extension}, fileR2Key=${dto.fileR2Key}`,
-    );
+    try {
+      await this.amqpConnection.publish(
+        DocumentService.EXCHANGE,
+        DocumentService.PARSE_ROUTING_KEY,
+        payload,
+      );
+      this.logger.log(
+        `文件已入队 MQ 解析：documentId=${doc.id}, title=${title}, ext=${extension}`,
+      );
+    } catch (mqError: any) {
+      this.logger.warn(
+        `RabbitMQ 消息投递失败或未就绪，已触发本地后台降级解析: documentId=${doc.id}, err=${mqError.message}`,
+      );
+      this.executeDirectParseFallback(payload).catch((err) =>
+        this.logger.error(`本地降级解析异常: ${err.message}`, err.stack),
+      );
+    }
 
     return {
       documentId: doc.id,
@@ -127,6 +135,39 @@ export class DocumentService {
       status: DocumentStatus.Parsing,
       message: '文件已直传，后台正在异步解析中，请稍后刷新查看文档状态',
     };
+  }
+
+  /**
+   * MQ 不可用时的本地后台降级解析（非阻塞主响应流程）
+   */
+  private async executeDirectParseFallback(payload: DocumentParseJobPayload) {
+    const { documentId, fileR2Key, originalFilename } = payload;
+    try {
+      const fileBuffer = await this.r2Storage.downloadFile(fileR2Key);
+      const parsedContent = await this.fileParserService.parse({
+        originalname: originalFilename,
+        buffer: fileBuffer,
+        size: fileBuffer.length,
+      });
+      const contentSummary = parsedContent.trim().slice(0, 200);
+      const contentDoc = await this.contentModel.create({
+        documentId,
+        content: parsedContent,
+        contentLength: parsedContent.length,
+        contentSummary,
+        version: 1,
+        deleted: false,
+      });
+      const contentId = String(contentDoc._id);
+      const wordCount = this.countWords(parsedContent);
+      await this.fulfillParsedContent(documentId, contentId, wordCount);
+      this.logger.log(
+        `[降级解析] 文档已成功解析并回写：documentId=${documentId}, contentId=${contentId}, words=${wordCount}`,
+      );
+    } catch (err: any) {
+      this.logger.error(`[降级解析失败] documentId=${documentId}: ${err.message}`);
+      await this.markDocumentFailed(documentId, err.message);
+    }
   }
 
   /**
