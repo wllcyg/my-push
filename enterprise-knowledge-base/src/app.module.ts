@@ -118,4 +118,4 @@ import { TagEntity } from './dictionary/entities/tag.entity';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

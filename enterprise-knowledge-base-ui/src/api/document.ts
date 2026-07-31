@@ -1,10 +1,5 @@
 import axios from 'axios';
-
-// 基础 Axios 实例
-const api = axios.create({
-  baseURL: '/api',
-  timeout: 10000,
-});
+import { api } from './client';
 
 /** 文档状态枚举 */
 export enum DocumentStatus {
@@ -167,7 +162,7 @@ export async function uploadToR2Directly(
     headers: {
       'Content-Type': file.type || 'application/octet-stream',
     },
-    onUploadProgress: (progressEvent) => {
+    onUploadProgress: (progressEvent: any) => {
       if (progressEvent.total) {
         const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
         onProgress?.(percent);
