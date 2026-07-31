@@ -1,7 +1,7 @@
 # ----------------------------------------------------
 # Stage 1: Build Phase (打包构建)
 # ----------------------------------------------------
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ RUN pnpm run build
 # ----------------------------------------------------
 # Stage 2: Production Runner Phase (生产运行)
 # ----------------------------------------------------
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
