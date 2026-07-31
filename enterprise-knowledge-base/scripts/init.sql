@@ -56,7 +56,7 @@ ON CONFLICT (id) DO NOTHING;
 CREATE TABLE IF NOT EXISTS kh_document (
     id BIGINT PRIMARY KEY,
     title VARCHAR NOT NULL,
-    content_id VARCHAR NOT NULL UNIQUE,
+    content_id VARCHAR,
     summary VARCHAR,
     category_id BIGINT,
     team_id BIGINT,
@@ -78,3 +78,18 @@ CREATE TABLE IF NOT EXISTS kh_document (
     update_by BIGINT,
     deleted BOOLEAN NOT NULL DEFAULT false
 );
+
+-- 6. 创建文档向量切片表 (kh_document_chunk)
+CREATE TABLE IF NOT EXISTS kh_document_chunk (
+    id BIGINT PRIMARY KEY,
+    document_id BIGINT NOT NULL,
+    chunk_index INT NOT NULL,
+    content TEXT NOT NULL,
+    word_count INT NOT NULL DEFAULT 0,
+    embedding TEXT,
+    metadata JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 创建向量切片表关联索引
+CREATE INDEX IF NOT EXISTS idx_chunk_doc_id ON kh_document_chunk(document_id);
