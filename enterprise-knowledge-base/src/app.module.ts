@@ -53,7 +53,10 @@ import { TagEntity } from './dictionary/entities/tag.entity';
               type: 'topic',
             },
           ],
-          uri: config.get<string>('RABBITMQ_URL', ''),
+          uri:
+            config.get<string>('RABBITMQ_URL') ||
+            config.get<string>('RABBITMQ_URI') ||
+            'amqp://guest:guest@localhost:5672',
           // 启动时不阻塞等待 MQ 连接，避免 MQ 暂时不可用导致服务无法启动
           connectionInitOptions: { wait: false },
           enableControllerDiscovery: true,
