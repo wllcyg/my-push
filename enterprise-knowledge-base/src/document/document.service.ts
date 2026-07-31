@@ -33,6 +33,9 @@ import {
   getExtension,
   titleFromFilename,
 } from './parser/utils/markdown.util';
+import { DocumentChunkEntity } from './entities/document-chunk.entity';
+import { DocumentChunkingService } from './parser/utils/document-chunking.service';
+import { EmbeddingService } from './services/embedding.service';
 
 /** MQ 解析任务消息体结构 */
 export interface DocumentParseJobPayload {
@@ -74,6 +77,10 @@ export class DocumentService {
     private readonly r2Storage: R2StorageService,
     /** RabbitMQ 连接（用于发布解析任务消息） */
     private readonly amqpConnection: AmqpConnection,
+    /** 智能切片服务 */
+    private readonly chunkingService: DocumentChunkingService,
+    /** Embedding 向量生成服务 */
+    private readonly embeddingService: EmbeddingService,
   ) {}
 
   /**
@@ -109,20 +116,23 @@ export class DocumentService {
       title,
     };
     try {
+      this.logger.log(
+        `[RabbitMQ Producer] 📤 正在向 Exchange [${DocumentService.EXCHANGE}] 投递解析任务 | RoutingKey: ${DocumentService.PARSE_ROUTING_KEY}, documentId=${doc.id}`,
+      );
       await this.amqpConnection.publish(
         DocumentService.EXCHANGE,
         DocumentService.PARSE_ROUTING_KEY,
         payload,
       );
       this.logger.log(
-        `文件已入队 MQ 解析：documentId=${doc.id}, title=${title}, ext=${extension}`,
+        `[RabbitMQ Producer] ✅ 解析任务已成功投递到 MQ 队列：documentId=${doc.id}, title=${title}, ext=${extension}`,
       );
     } catch (mqError: any) {
       this.logger.warn(
-        `RabbitMQ 消息投递失败或未就绪，已触发本地后台降级解析: documentId=${doc.id}, err=${mqError.message}`,
+        `[RabbitMQ Producer] ⚠️ 消息投递失败或 MQ 未就绪 (${mqError.message})，已自动触发本地后台降级解析: documentId=${doc.id}`,
       );
       this.executeDirectParseFallback(payload).catch((err) =>
-        this.logger.error(`本地降级解析异常: ${err.message}`, err.stack),
+        this.logger.error(`[降级解析异常] documentId=${doc.id}: ${err.message}`, err.stack),
       );
     }
 
@@ -138,7 +148,7 @@ export class DocumentService {
   }
 
   /**
-   * MQ 不可用时的本地后台降级解析（非阻塞主响应流程）
+   * MQ 不可用时的本地后台降级解析（非阻塞主响应流程，包含正文入库、智能切片与向量化生成落盘）
    */
   private async executeDirectParseFallback(payload: DocumentParseJobPayload) {
     const { documentId, fileR2Key, originalFilename } = payload;
@@ -164,6 +174,43 @@ export class DocumentService {
       this.logger.log(
         `[降级解析] 文档已成功解析并回写：documentId=${documentId}, contentId=${contentId}, words=${wordCount}`,
       );
+
+      // 降级流程中同样触发智能切片与向量化生成落盘
+      try {
+        const chunks = this.chunkingService.split(parsedContent);
+        if (chunks.length > 0) {
+          const chunkTexts = chunks.map((c) => c.content);
+          const embeddings = await this.embeddingService.embedBatch(chunkTexts);
+
+          await this.em
+            .createQueryBuilder()
+            .delete()
+            .from(DocumentChunkEntity)
+            .where('documentId = :documentId', { documentId })
+            .execute();
+
+          const chunkEntities = chunks.map((chunk, idx) => {
+            return this.em.create(DocumentChunkEntity, {
+              id: nextSnowflakeId(),
+              documentId,
+              chunkIndex: chunk.chunkIndex,
+              content: chunk.content,
+              wordCount: chunk.wordCount,
+              embedding: embeddings[idx] ?? null,
+              metadata: chunk.metadata,
+            });
+          });
+
+          await this.em.save(DocumentChunkEntity, chunkEntities);
+          this.logger.log(
+            `[降级解析] 向量切片落盘成功：documentId=${documentId}, 切片数=${chunkEntities.length}`,
+          );
+        }
+      } catch (vectorErr: any) {
+        this.logger.warn(
+          `[降级解析] 向量切片落盘失败 (${vectorErr.message})，不影响正文解析主流程`,
+        );
+      }
     } catch (err: any) {
       this.logger.error(`[降级解析失败] documentId=${documentId}: ${err.message}`);
       await this.markDocumentFailed(documentId, err.message);

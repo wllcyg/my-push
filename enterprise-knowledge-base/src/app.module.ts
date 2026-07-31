@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -47,21 +47,29 @@ import { TagEntity } from './dictionary/entities/tag.entity';
       ...RabbitMQModule.forRootAsync({
         imports: [ConfigModule],
         inject: [ConfigService],
-        useFactory: (config: ConfigService) => ({
-          exchanges: [
-            {
-              name: 'knowledge.document.exchange',
-              type: 'topic',
-            },
-          ],
-          uri:
+        useFactory: (config: ConfigService) => {
+          const rabbitLogger = new Logger('RabbitMQModule');
+          const rabbitUrl =
             config.get<string>('RABBITMQ_URL') ||
             config.get<string>('RABBITMQ_URI') ||
-            'amqp://guest:guest@localhost:5672',
-          // 启动时不阻塞等待 MQ 连接，避免 MQ 暂时不可用导致服务无法启动
-          connectionInitOptions: { wait: false },
-          enableControllerDiscovery: true,
-        }),
+            'amqp://guest:guest@localhost:5672';
+          rabbitLogger.log(
+            `🐰 正在初始化 RabbitMQ 模块配置 | 目标 Server: ${rabbitUrl.replace(/:[^:@]+@/, ':****@')}`,
+          );
+          return {
+            exchanges: [
+              {
+                name: 'knowledge.document.exchange',
+                type: 'topic',
+              },
+            ],
+            uri: rabbitUrl,
+            // 启动时不阻塞等待 MQ 连接，避免 MQ 暂时不可用导致服务无法启动
+            connectionInitOptions: { wait: false },
+            enableControllerDiscovery: true,
+            logger: rabbitLogger,
+          };
+        },
       }),
       global: true,
     },

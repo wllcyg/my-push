@@ -10,13 +10,24 @@ export class EmbeddingService {
   private readonly dimension: number;
 
   constructor(private readonly configService: ConfigService) {
-    this.apiUrl =
+    const rawUrl =
       this.configService.get<string>('EMBEDDING_API_URL') ||
-      'https://api.openai.com/v1/embeddings';
-    this.apiKey = this.configService.get<string>('EMBEDDING_API_KEY') || '';
+      this.configService.get<string>('OPENAI_BASE_URL') ||
+      'https://api.openai.com/v1';
+    this.apiUrl = rawUrl.endsWith('/embeddings')
+      ? rawUrl
+      : `${rawUrl.replace(/\/+$/, '')}/embeddings`;
+
+    this.apiKey =
+      this.configService.get<string>('EMBEDDING_API_KEY') ||
+      this.configService.get<string>('ALIYUN_API_KEY') ||
+      '';
+
     this.model =
       this.configService.get<string>('EMBEDDING_MODEL') ||
-      'text-embedding-3-small';
+      this.configService.get<string>('OPENAI_EMBEDDING_NAME') ||
+      'text-embedding-v4';
+
     this.dimension = Number(
       this.configService.get<number>('EMBEDDING_DIMENSION') || 1536,
     );

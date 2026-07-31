@@ -52,7 +52,7 @@ export class DocumentVectorConsumer {
   ): Promise<void | Nack> {
     const { documentId, contentId } = payload;
     this.logger.log(
-      `[MQ Vector Consumer] 收到向量化任务：documentId=${documentId}, contentId=${contentId}`,
+      `[RabbitMQ Consumer: Vector] 📥 收到向量化解析任务 | documentId=${documentId}, contentId=${contentId}`,
     );
 
     try {
@@ -63,7 +63,7 @@ export class DocumentVectorConsumer {
 
       if (!contentDoc || !contentDoc.content) {
         this.logger.warn(
-          `[MQ Vector Consumer] 未找到对应正文内容，跳过向量化: contentId=${contentId}`,
+          `[RabbitMQ Consumer: Vector] ⚠️ 未找到对应正文内容，跳过向量化: contentId=${contentId}`,
         );
         return;
       }
@@ -72,7 +72,7 @@ export class DocumentVectorConsumer {
       const chunks = this.chunkingService.split(contentDoc.content);
       if (chunks.length === 0) {
         this.logger.warn(
-          `[MQ Vector Consumer] 切片结果为空，跳过向量化: documentId=${documentId}`,
+          `[RabbitMQ Consumer: Vector] ⚠️ 切片结果为空，跳过向量化: documentId=${documentId}`,
         );
         return;
       }
@@ -105,12 +105,12 @@ export class DocumentVectorConsumer {
       await this.em.save(DocumentChunkEntity, chunkEntities);
 
       this.logger.log(
-        `[MQ Vector Consumer] 文档向量化入库完成：documentId=${documentId}, 切片数=${chunkEntities.length}`,
+        `[RabbitMQ Consumer: Vector] ✅ 向量化切片落盘完成 | documentId=${documentId}, 生成切片数=${chunkEntities.length}`,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `[MQ Vector Consumer] 文档向量化失败：documentId=${documentId}, error=${message}`,
+        `[RabbitMQ Consumer: Vector] ❌ 向量化处理失败 | documentId=${documentId}, error=${message}`,
         error instanceof Error ? error.stack : undefined,
       );
       return new Nack(false);

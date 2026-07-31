@@ -50,14 +50,14 @@ export class DocumentParseConsumer {
     const { documentId, fileR2Key, originalFilename, mimetype } = payload;
 
     this.logger.log(
-      `[MQ Consumer] 收到解析任务：documentId=${documentId}, file=${originalFilename}`,
+      `[RabbitMQ Consumer: Parse] 📥 收到解析任务 | documentId=${documentId}, file=${originalFilename}`,
     );
 
     try {
       // Step 1：从 Cloudflare R2 下载原始文件 Buffer
       const fileBuffer = await this.r2Storage.downloadFile(fileR2Key);
       this.logger.log(
-        `[MQ Consumer] 文件下载成功：fileR2Key=${fileR2Key}, size=${fileBuffer.length}`,
+        `[RabbitMQ Consumer: Parse] ⬇️ R2 文件下载成功 | fileR2Key=${fileR2Key}, size=${fileBuffer.length} bytes`,
       );
 
       // Step 2：调用 FileParserService 解析生成 Markdown（DOCX 图片自动转存 R2）
@@ -67,7 +67,7 @@ export class DocumentParseConsumer {
         size: fileBuffer.length,
       });
       this.logger.log(
-        `[MQ Consumer] 文件解析完成：documentId=${documentId}, chars=${parsedContent.length}`,
+        `[RabbitMQ Consumer: Parse] 📝 文件解析完成 | documentId=${documentId}, chars=${parsedContent.length}`,
       );
 
       // Step 3：在 Mongo 新建正文记录，获得 ObjectId（增加网络抖动重试机制）
@@ -88,7 +88,7 @@ export class DocumentParseConsumer {
         } catch (err: any) {
           retries--;
           if (retries === 0) throw err;
-          this.logger.warn(`[MQ Consumer] MongoDB 写入网络波动，正在进行自动重试 (剩余 ${retries} 次): ${err.message}`);
+          this.logger.warn(`[RabbitMQ Consumer: Parse] MongoDB 写入网络波动，重试中 (剩余 ${retries} 次): ${err.message}`);
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
@@ -103,6 +103,9 @@ export class DocumentParseConsumer {
       );
 
       // Step 5：向 RabbitMQ 投递 kb.document.vectorize 消息，触发异步文本切片与向量化
+      this.logger.log(
+        `[RabbitMQ Producer: Vectorize] 📤 投递向量化处理任务 | RoutingKey: ${DocumentVectorConsumer.VECTOR_ROUTING_KEY}, documentId=${documentId}, contentId=${contentId}`,
+      );
       await this.amqpConnection.publish(
         DocumentService.EXCHANGE,
         DocumentVectorConsumer.VECTOR_ROUTING_KEY,
@@ -110,7 +113,7 @@ export class DocumentParseConsumer {
       );
 
       this.logger.log(
-        `[MQ Consumer] 文档解析入库完成，已投递向量化任务：documentId=${documentId}, contentId=${contentId}, words=${wordCount}`,
+        `[RabbitMQ Consumer: Parse] ✅ 文档解析与正文落盘完成 | documentId=${documentId}, contentId=${contentId}, words=${wordCount}`,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
