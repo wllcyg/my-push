@@ -63,33 +63,43 @@ export class EmbeddingService {
   }
 
   /**
-   * 调用 OpenAI 兼容的 /v1/embeddings 向量接口
+   * 调用 OpenAI / 阿里百炼兼容的 /v1/embeddings 向量接口（按 MAX 10 条自动分批）
    */
   private async fetchRemoteEmbeddings(texts: string[]): Promise<number[][]> {
-    const response = await fetch(this.apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        input: texts,
-        model: this.model,
-      }),
-    });
+    const BATCH_SIZE = 10;
+    const allEmbeddings: number[][] = [];
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Embedding API 响应异常 HTTP ${response.status}: ${errText}`);
+    for (let i = 0; i < texts.length; i += BATCH_SIZE) {
+      const batch = texts.slice(i, i + BATCH_SIZE);
+      const response = await fetch(this.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          input: batch,
+          model: this.model,
+        }),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(
+          `Embedding API 响应异常 HTTP ${response.status}: ${errText}`,
+        );
+      }
+
+      const json = await response.json();
+      if (!json.data || !Array.isArray(json.data)) {
+        throw new Error('Embedding API 返回格式非法');
+      }
+
+      const batchEmbeddings = json.data.map((item: any) => item.embedding);
+      allEmbeddings.push(...batchEmbeddings);
     }
 
-    const json = await response.json();
-    if (!json.data || !Array.isArray(json.data)) {
-      throw new Error('Embedding API 返回格式非法');
-    }
-
-    // 依序提取 embedding 向量
-    return json.data.map((item: any) => item.embedding);
+    return allEmbeddings;
   }
 
   /**

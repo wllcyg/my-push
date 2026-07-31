@@ -182,12 +182,7 @@ export class DocumentService {
           const chunkTexts = chunks.map((c) => c.content);
           const embeddings = await this.embeddingService.embedBatch(chunkTexts);
 
-          await this.em
-            .createQueryBuilder()
-            .delete()
-            .from(DocumentChunkEntity)
-            .where('documentId = :documentId', { documentId })
-            .execute();
+          await this.em.delete(DocumentChunkEntity, { documentId });
 
           const chunkEntities = chunks.map((chunk, idx) => {
             return this.em.create(DocumentChunkEntity, {
