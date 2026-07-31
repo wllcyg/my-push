@@ -6,6 +6,8 @@ export enum DocumentStatus {
   Draft = 0,
   Published = 1,
   Archived = 2,
+  Parsing = 3,
+  Failed = 4,
 }
 
 /** 文档元数据接口 */

@@ -118,7 +118,9 @@ export const DocumentList: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       width: 110,
-      render: (status: DocumentStatus) => <StatusTag status={status} />,
+      render: (status: DocumentStatus, record: DocumentItem) => (
+        <StatusTag status={status} remark={record.remark} />
+      ),
     },
     {
       title: '字数',
