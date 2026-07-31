@@ -82,7 +82,12 @@ export class DocumentVectorConsumer {
       const embeddings = await this.embeddingService.embedBatch(chunkTexts);
 
       // 4. 清理旧切片 (若已存在)，实现幂等落盘
-      await this.em.delete(DocumentChunkEntity, { documentId });
+      await this.em
+        .createQueryBuilder()
+        .delete()
+        .from(DocumentChunkEntity)
+        .where('documentId = :documentId', { documentId })
+        .execute();
 
       // 5. 构建并写入向量切片实体列表
       const chunkEntities = chunks.map((chunk, idx) => {
