@@ -19,3 +19,184 @@ body {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(226, 232, 240, 0.8);
 }
+
+/* AI 聊天 Markdown 内容排版（项目未引入 @tailwindcss/typography，此处手写 prose 样式） */
+.prose-chat {
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: inherit;
+  word-break: break-word;
+}
+
+.prose-chat > *:first-child {
+  margin-top: 0;
+}
+
+.prose-chat > *:last-child {
+  margin-bottom: 0;
+}
+
+.prose-chat p {
+  margin: 0 0 0.75em;
+}
+
+.prose-chat h1,
+.prose-chat h2,
+.prose-chat h3,
+.prose-chat h4 {
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.4;
+  margin: 1.1em 0 0.5em;
+}
+
+.prose-chat h1 {
+  font-size: 1.2em;
+}
+
+.prose-chat h2 {
+  font-size: 1.12em;
+}
+
+.prose-chat h3 {
+  font-size: 1.05em;
+}
+
+.prose-chat h4 {
+  font-size: 1em;
+}
+
+.prose-chat ul,
+.prose-chat ol {
+  margin: 0.4em 0 0.9em;
+  padding-left: 1.4em;
+}
+
+.prose-chat ul {
+  list-style: disc;
+}
+
+.prose-chat ol {
+  list-style: decimal;
+}
+
+.prose-chat li {
+  margin: 0.32em 0;
+}
+
+.prose-chat li > ul,
+.prose-chat li > ol {
+  margin: 0.32em 0;
+}
+
+.prose-chat li::marker {
+  color: #475569;
+}
+
+.prose-chat strong {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.prose-chat a {
+  color: #4f46e5;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-chat code {
+  background: #f1f5f9;
+  color: #be185d;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.prose-chat pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 0.9em 1em;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin: 0.75em 0;
+}
+
+.prose-chat pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: 0.85em;
+}
+
+.prose-chat blockquote {
+  border-left: 3px solid #cbd5e1;
+  padding-left: 0.9em;
+  margin: 0.75em 0;
+  color: #64748b;
+  font-style: italic;
+}
+
+.prose-chat hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1em 0;
+}
+
+.prose-chat table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75em 0;
+  font-size: 0.9em;
+}
+
+.prose-chat th,
+.prose-chat td {
+  border: 1px solid #e2e8f0;
+  padding: 0.4em 0.6em;
+  text-align: left;
+}
+
+.prose-chat th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+/* 用户气泡（深色背景）下的 Markdown 反色适配 */
+.prose-chat-invert,
+.prose-chat-invert p {
+  color: #eef2ff;
+}
+
+.prose-chat-invert h1,
+.prose-chat-invert h2,
+.prose-chat-invert h3,
+.prose-chat-invert h4 {
+  color: #ffffff;
+}
+
+.prose-chat-invert strong {
+  color: #ffffff;
+}
+
+.prose-chat-invert a {
+  color: #c7d2fe;
+}
+
+.prose-chat-invert code {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.prose-chat-invert li::marker {
+  color: #c7d2fe;
+}
+
+.prose-chat-invert blockquote {
+  border-left-color: rgba(255, 255, 255, 0.4);
+  color: #e0e7ff;
+}
+
+.prose-chat-invert hr {
+  border-top-color: rgba(255, 255, 255, 0.3);
+}

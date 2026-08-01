@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { DataSource } from 'typeorm';
 import { EmbeddingService } from '../../document/services/embedding.service';
 
+/** 与统一规范保持一致的 1024 维向量 */
+const VECTOR_DIM = 1024;
+
 export function createKnowledgeRetrieverTool(
   embeddingService: EmbeddingService,
   dataSource: DataSource,
@@ -19,11 +22,14 @@ export function createKnowledgeRetrieverTool(
     func: async ({ query }) => {
       console.log(`\n🤖 [LangChain Tool] 正在触发知识库向量检索... query="${query}"`);
       try {
-        // 1. 将查询短语向量化 (1024 维)
-        const queryVector = await embeddingService.embed(query);
+        // 1. 将查询短语向量化，强制指定 1024 维
+        const queryVector = await embeddingService.embed(query, VECTOR_DIM);
         const vectorStr = `[${queryVector.join(',')}]`;
 
+        console.log(`📐 [LangChain Tool] 查询向量维度: ${queryVector.length}`);
+
         // 2. 在 Supabase pgvector 关联查询 Top 4 最匹配切片与文档标题
+        // 显式限制 1024 维度
         const rawResults: Array<{
           id: string;
           document_id: string;
@@ -39,10 +45,12 @@ export function createKnowledgeRetrieverTool(
             c.chunk_index, 
             c.content, 
             d.title,
-            (c.embedding::vector <=> $1::vector) AS distance
+            (c.embedding::vector(1024) <=> $1::vector(1024)) AS distance
           FROM kh_document_chunk c
           LEFT JOIN kh_document d ON c.document_id = d.id
-          WHERE c.embedding IS NOT NULL AND c.embedding != ''
+          WHERE c.embedding IS NOT NULL 
+            AND c.embedding != ''
+            AND vector_dims(c.embedding::vector) = 1024
           ORDER BY distance ASC
           LIMIT 4;
         `,

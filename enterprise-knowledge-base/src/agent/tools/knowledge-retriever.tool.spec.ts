@@ -78,11 +78,11 @@ describe('createKnowledgeRetrieverTool', () => {
 
       await tool.invoke({ query: '测试规范' });
 
-      expect(mockEmbeddingService.embed).toHaveBeenCalledWith('测试规范');
+      expect(mockEmbeddingService.embed).toHaveBeenCalledWith('测试规范', 1024);
 
       const sqlQuery: string = mockDataSource.query.mock.calls[0][0];
-      expect(sqlQuery).toContain('c.embedding::vector <=> $1::vector');
-      expect(sqlQuery).toContain('WHERE c.embedding IS NOT NULL');
+      expect(sqlQuery).toContain('c.embedding::vector(1024) <=> $1::vector(1024)');
+      expect(sqlQuery).toContain('vector_dims(c.embedding::vector) = 1024');
     });
 
     it('向量参数应以 [x,y,z] 字符串格式传入 SQL 参数', async () => {

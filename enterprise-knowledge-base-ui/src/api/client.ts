@@ -5,8 +5,11 @@ import axios from 'axios';
  * 本地开发 (pnpm dev) 时自动读取 .env.development -> http://localhost:3000
  * 线上构建 (pnpm build) 时自动读取 .env.production -> https://kb-api.cheatppf.xyz
  */
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
+  baseURL: API_BASE_URL,
   timeout: 15000,
 });
 
