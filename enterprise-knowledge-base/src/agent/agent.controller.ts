@@ -20,14 +20,25 @@ export class AgentController {
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.setHeader('X-Vercel-AI-Data-Stream', 'v1');
 
-      // 纯文本流传输 (适配前端 TextStreamChatTransport)
+      // 纯文本流传输 (适配前端 TextStreamChatTransport 与客户端一键中断)
+      let clientAborted = false;
+      res.on('close', () => {
+        if (!res.writableEnded) {
+          clientAborted = true;
+          this.logger.warn('⚠️ [Agent] 客户端中断了 HTTP 流连接，已停止 Agent 后续响应');
+        }
+      });
+
       for await (const textToken of textStream) {
+        if (clientAborted) break;
         if (textToken) {
           res.write(textToken);
         }
       }
 
-      res.end();
+      if (!clientAborted) {
+        res.end();
+      }
     } catch (error) {
       this.logger.error('❌ Agent 问答数据流异常:', error.stack);
       if (!res.headersSent) {

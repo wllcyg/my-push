@@ -5,6 +5,7 @@ import {
   UserOutlined,
   SendOutlined,
   ClearOutlined,
+  PauseOutlined,
 } from '@ant-design/icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -21,8 +22,8 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ open, onClose }) => 
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // 使用适配 0:"text"\n 格式数据流的 TextStreamChatTransport
-  const { messages, sendMessage, status, setMessages } = useChat({
+  // 使用 useChat 的 stop 方法，支持客户端中断 HTTP 流式连接 (AbortController)
+  const { messages, sendMessage, status, stop, setMessages } = useChat({
     transport: new TextStreamChatTransport({
       api: `${API_BASE_URL}/agent/chat`,
       headers: (): Record<string, string> => {
@@ -191,18 +192,28 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ open, onClose }) => 
               }}
               className="!rounded-2xl !py-3 !px-4 !text-[15px] resize-none"
             />
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={<SendOutlined className="text-lg" />}
-              loading={isLoading}
-              disabled={!input.trim() || isLoading}
-              className={`!rounded-2xl !h-12 !w-12 shrink-0 !flex !items-center !justify-center !border-none !shadow-none ${
-                input.trim() && !isLoading
-                  ? '!bg-emerald-600 hover:!bg-emerald-500 !text-white'
-                  : '!bg-slate-200 !text-slate-400 !cursor-not-allowed'
-              }`}
-            />
+            {isLoading ? (
+              <Button
+                type="primary"
+                danger
+                onClick={() => stop()}
+                icon={<PauseOutlined className="text-lg" />}
+                title="停止生成"
+                className="!rounded-2xl !h-12 !w-12 shrink-0 !flex !items-center !justify-center !border-none !shadow-none !bg-rose-500 hover:!bg-rose-600 !text-white"
+              />
+            ) : (
+              <Button
+                type="primary"
+                htmlType="submit"
+                icon={<SendOutlined className="text-lg" />}
+                disabled={!input.trim()}
+                className={`!rounded-2xl !h-12 !w-12 shrink-0 !flex !items-center !justify-center !border-none !shadow-none ${
+                  input.trim()
+                    ? '!bg-emerald-600 hover:!bg-emerald-500 !text-white'
+                    : '!bg-slate-200 !text-slate-400 !cursor-not-allowed'
+                }`}
+              />
+            )}
           </form>
         </div>
       </div>
