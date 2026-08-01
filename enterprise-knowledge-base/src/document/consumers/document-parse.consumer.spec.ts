@@ -5,7 +5,7 @@ import { FileParserService } from '../parser/file-parser.service';
 import { R2StorageService } from '../../storage/r2-storage.service';
 import { DocumentService } from '../document.service';
 import { DocumentContent } from '../schemas/document-content.schema';
-import { Nack } from '@golevelup/nestjs-rabbitmq';
+import { Nack, AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 /**
  * DocumentParseConsumer 单元测试
@@ -32,6 +32,10 @@ describe('DocumentParseConsumer', () => {
     create: jest.fn(),
   };
 
+  const mockAmqpConnection = {
+    publish: jest.fn(),
+  };
+
   const basePayload = {
     documentId: '123456789',
     fileR2Key: 'raw-documents/2026-07-28/123456789_test.docx',
@@ -50,6 +54,7 @@ describe('DocumentParseConsumer', () => {
         { provide: FileParserService, useValue: mockFileParserService },
         { provide: DocumentService, useValue: mockDocumentService },
         { provide: getModelToken(DocumentContent.name), useValue: mockContentModel },
+        { provide: AmqpConnection, useValue: mockAmqpConnection },
       ],
     }).compile();
 

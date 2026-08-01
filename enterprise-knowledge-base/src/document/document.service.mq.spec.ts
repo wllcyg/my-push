@@ -8,6 +8,8 @@ import { DocumentStatus } from './entities/document.entity';
 import { FileParserService } from './parser/file-parser.service';
 import { R2StorageService } from '../storage/r2-storage.service';
 import { BadRequestException } from '@nestjs/common';
+import { DocumentChunkingService } from './parser/utils/document-chunking.service';
+import { EmbeddingService } from './services/embedding.service';
 
 /**
  * DocumentService 单元测试
@@ -46,6 +48,12 @@ describe('DocumentService - MQ 异步相关方法', () => {
     publish: jest.fn(),
   };
 
+  const mockCacheManager = {
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -54,9 +62,12 @@ describe('DocumentService - MQ 异步相关方法', () => {
         DocumentService,
         { provide: getEntityManagerToken(), useValue: mockEntityManager },
         { provide: getModelToken(DocumentContent.name), useValue: mockContentModel },
+        { provide: 'CACHE_MANAGER', useValue: mockCacheManager },
         { provide: FileParserService, useValue: mockFileParserService },
         { provide: R2StorageService, useValue: mockR2Storage },
         { provide: AmqpConnection, useValue: mockAmqpConnection },
+        { provide: DocumentChunkingService, useValue: { split: jest.fn() } },
+        { provide: EmbeddingService, useValue: { embedBatch: jest.fn() } },
       ],
     }).compile();
 
@@ -145,6 +156,18 @@ describe('DocumentService - MQ 异步相关方法', () => {
         }),
       );
     });
+
+    it('wordCount 为 0 时也应成功写入（空文档边界）', async () => {
+      mockEntityManager.update.mockResolvedValue({ affected: 1 });
+
+      await service.fulfillParsedContent('doc-empty', 'mongo-objectid-empty', 0);
+
+      expect(mockEntityManager.update).toHaveBeenCalledWith(
+        expect.anything(),
+        { id: 'doc-empty' },
+        expect.objectContaining({ wordCount: 0, status: DocumentStatus.Draft }),
+      );
+    });
   });
 
   // ─────────────────────────────────────────────
@@ -166,14 +189,38 @@ describe('DocumentService - MQ 异步相关方法', () => {
       );
     });
 
-    it('超长错误信息应被截断至 500 个字符', async () => {
+    it('超长错误信息应被截断至 500 个字符（保留前 500 字符）', async () => {
       mockEntityManager.update.mockResolvedValue({ affected: 1 });
-      const longError = 'A'.repeat(600);
+      const longError = 'A'.repeat(300) + 'B'.repeat(300); // 600 字符
 
       await service.markDocumentFailed('doc-003', longError);
 
       const updateCall = mockEntityManager.update.mock.calls[0][2];
+      // 精确验证：长度不超过 500
       expect(updateCall.remark.length).toBeLessThanOrEqual(500);
+      // 精确验证：保留的是前 500 字符（前 300 个 A + 后 200 个 B）
+      expect(updateCall.remark.startsWith('A'.repeat(300))).toBe(true);
+    });
+
+    it('错误信息恰好为 500 个字符时不应截断', async () => {
+      mockEntityManager.update.mockResolvedValue({ affected: 1 });
+      const exactError = 'C'.repeat(500);
+
+      await service.markDocumentFailed('doc-004', exactError);
+
+      const updateCall = mockEntityManager.update.mock.calls[0][2];
+      expect(updateCall.remark).toBe(exactError);
+      expect(updateCall.remark.length).toBe(500);
+    });
+
+    it('错误信息在 500 字符以内时不应截断', async () => {
+      mockEntityManager.update.mockResolvedValue({ affected: 1 });
+      const shortError = '文件解析失败，mammoth 返回空内容';
+
+      await service.markDocumentFailed('doc-005', shortError);
+
+      const updateCall = mockEntityManager.update.mock.calls[0][2];
+      expect(updateCall.remark).toBe(shortError);
     });
   });
 });

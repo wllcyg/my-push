@@ -58,8 +58,9 @@ export const DocumentDetailModal: React.FC<Props> = ({
       }
     >
       {isLoading ? (
-        <div className="flex justify-center items-center py-20">
-          <Spin size="large" tip="载入文档详情中..." />
+        <div className="flex flex-col justify-center items-center py-20">
+          <Spin size="large" />
+          <span className="text-slate-400 text-xs mt-3">载入文档详情中...</span>
         </div>
       ) : doc ? (
         <div className="space-y-6">

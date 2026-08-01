@@ -13,13 +13,16 @@ import {
   BookOutlined,
   AppstoreOutlined,
   CloudUploadOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { AIChatDrawer } from '../components/AIChatDrawer';
 
 const { Header, Sider, Content } = Layout;
 
 export const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -64,6 +67,16 @@ export const MainLayout: React.FC = () => {
     if (location.pathname.includes('/teams')) return '团队协作';
     if (location.pathname.includes('/settings')) return '系统配置';
     return '文档管理';
+  };
+
+  // 读取当前登录用户信息
+  const userInfoStr = localStorage.getItem('user_info');
+  const currentUser = userInfoStr ? JSON.parse(userInfoStr) : { username: '系统管理员', role: '超级管理员' };
+
+  const handleLogout = () => {
+    localStorage.removeItem('sb_access_token');
+    localStorage.removeItem('user_info');
+    navigate('/login');
   };
 
   return (
@@ -122,6 +135,15 @@ export const MainLayout: React.FC = () => {
 
           <div className="flex items-center gap-3">
             <Button
+              type="primary"
+              icon={<RobotOutlined />}
+              onClick={() => setAiDrawerOpen(true)}
+              className="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 border-none shadow-sm shadow-emerald-200 font-medium flex items-center gap-1"
+            >
+              AI 问答助手
+            </Button>
+
+            <Button
               icon={<CloudUploadOutlined />}
               onClick={() => navigate('/import')}
               className="border-slate-300 text-slate-700 hover:text-indigo-600 hover:border-indigo-600 font-medium flex items-center"
@@ -147,15 +169,22 @@ export const MainLayout: React.FC = () => {
             <Dropdown
               menu={{
                 items: [
-                  { key: 'profile', label: '个人中心' },
-                  { key: 'logout', label: '退出登录', danger: true },
+                  { key: 'profile', label: `账号: ${currentUser.username}` },
+                  { key: 'logout', label: '退出登录', danger: true, onClick: handleLogout },
                 ],
               }}
               placement="bottomRight"
             >
-              <Space className="cursor-pointer hover:bg-slate-100 px-2 py-1 rounded-lg transition-colors">
-                <Avatar icon={<UserOutlined />} className="bg-indigo-50 text-indigo-600" />
-                <span className="text-sm font-medium text-slate-700">系统管理员</span>
+              <Space className="cursor-pointer hover:bg-slate-100 px-2.5 py-1.5 rounded-xl transition-colors">
+                <Avatar
+                  src={currentUser.avatar}
+                  icon={<UserOutlined />}
+                  className="bg-indigo-100 text-indigo-600 border border-indigo-200"
+                />
+                <div className="hidden sm:flex flex-col items-start leading-tight">
+                  <span className="text-xs font-semibold text-slate-800">{currentUser.username}</span>
+                  <span className="text-[10px] text-slate-400 font-medium">{currentUser.role || 'Admin'}</span>
+                </div>
               </Space>
             </Dropdown>
           </div>
@@ -165,6 +194,9 @@ export const MainLayout: React.FC = () => {
         <Content className="m-6 min-h-[calc(100vh-112px)]">
           <Outlet />
         </Content>
+
+        {/* AI 问答助手抽屉 */}
+        <AIChatDrawer open={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} />
       </Layout>
     </Layout>
   );

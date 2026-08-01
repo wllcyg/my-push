@@ -19,9 +19,15 @@ import { DocumentChunkEntity } from './document/entities/document-chunk.entity';
 import { CategoryEntity } from './dictionary/entities/category.entity';
 import { TeamEntity } from './dictionary/entities/team.entity';
 import { TagEntity } from './dictionary/entities/tag.entity';
+import { AgentModule } from './agent/agent.module';
+import { LlmModule } from './llm/llm.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
+    // LLM 全局基础服务模块
+    LlmModule,
+
     // 全局配置加载 .env
     ConfigModule.forRoot({
       isGlobal: true,
@@ -121,8 +127,10 @@ import { TagEntity } from './dictionary/entities/tag.entity';
     }),
 
     // 业务模块
+    AuthModule,
     DocumentModule,
     DictionaryModule,
+    AgentModule,
   ],
   controllers: [AppController],
   providers: [

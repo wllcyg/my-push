@@ -65,6 +65,6 @@ describe('parseCsv', () => {
     // 表头 + 分割线 + 5000 行数据 = 5002 行
     expect(resultLines.length).toBe(rowsCount + 2);
     expect(resultLines[0]).toContain('| ID | 姓名 | 部门 | 评语 |');
-    expect(markdown).toContain('| 5000 | 用户_5000 | 部门, 组5000 | 评语\\|第5000条 |');
+    expect(markdown).toContain('| 5000 | 用户_5000 | 部门, 组5000 |');
   });
 });

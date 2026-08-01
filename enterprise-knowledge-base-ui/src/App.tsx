@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider, Card } from 'antd';
+import { ConfigProvider, Card, App as AntdApp } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MainLayout } from './layouts/MainLayout';
@@ -8,6 +8,8 @@ import { DocumentList } from './pages/DocumentList';
 import { DocumentEditor } from './pages/DocumentEditor';
 import { DocumentImport } from './pages/DocumentImport';
 import { DictionaryManagement } from './pages/DictionaryManagement';
+import { LoginPage } from './pages/LoginPage';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 // 全局 React Query 客户端配置
 const queryClient = new QueryClient({
@@ -21,7 +23,7 @@ const queryClient = new QueryClient({
 });
 
 const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
-  <Card className="border border-slate-200 shadow-sm rounded-xl py-12 text-center">
+  <Card className="border border-slate-200 shadow-sm rounded-xl py-12 text-center" variant="borderless">
     <h3 className="text-xl font-bold text-slate-700 m-0">{title}</h3>
     <p className="text-slate-400 text-sm mt-2">该模块功能正在研发迭代中，敬请期待...</p>
   </Card>
@@ -40,20 +42,36 @@ export const App: React.FC = () => {
           },
         }}
       >
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<Navigate to="/documents" replace />} />
-              <Route path="documents" element={<DocumentList />} />
-              <Route path="editor" element={<DocumentEditor />} />
-              <Route path="import" element={<DocumentImport />} />
-              <Route path="dictionary" element={<DictionaryManagement />} />
-              <Route path="categories" element={<PlaceholderPage title="分类空间模块" />} />
-              <Route path="teams" element={<PlaceholderPage title="团队协作模块" />} />
-              <Route path="settings" element={<PlaceholderPage title="系统配置模块" />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
+        <AntdApp>
+          <BrowserRouter>
+            <Routes>
+              {/* 登录认证页面 */}
+              <Route path="/login" element={<LoginPage />} />
+
+              {/* 受保护的受控主应用路由 */}
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Navigate to="/documents" replace />} />
+                <Route path="documents" element={<DocumentList />} />
+                <Route path="editor" element={<DocumentEditor />} />
+                <Route path="import" element={<DocumentImport />} />
+                <Route path="dictionary" element={<DictionaryManagement />} />
+                <Route path="categories" element={<PlaceholderPage title="分类空间模块" />} />
+                <Route path="teams" element={<PlaceholderPage title="团队协作模块" />} />
+                <Route path="settings" element={<PlaceholderPage title="系统配置模块" />} />
+              </Route>
+              
+              {/* 兜底通配跳转 */}
+              <Route path="*" element={<Navigate to="/documents" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </AntdApp>
       </ConfigProvider>
     </QueryClientProvider>
   );
