@@ -50,10 +50,29 @@ export class AgentService {
     ];
 
     for (const msg of rawMessages) {
+      if (!msg) continue;
+
+      let textContent = '';
+      if (typeof msg.content === 'string') {
+        textContent = msg.content;
+      } else if (Array.isArray(msg.content)) {
+        textContent = (msg.content as any[])
+          .filter((c: any) => c && (c.type === 'text' || typeof c === 'string'))
+          .map((c: any) => (typeof c === 'string' ? c : c.text || ''))
+          .join('');
+      } else if (Array.isArray((msg as any).parts)) {
+        textContent = ((msg as any).parts as any[])
+          .filter((p: any) => p && (p.type === 'text' || typeof p === 'string'))
+          .map((p: any) => (typeof p === 'string' ? p : p.text || ''))
+          .join('');
+      }
+
+      if (!textContent) continue;
+
       if (msg.role === 'user') {
-        formattedMessages.push(new HumanMessage(msg.content));
+        formattedMessages.push(new HumanMessage(textContent));
       } else if (msg.role === 'assistant') {
-        formattedMessages.push(new AIMessage(msg.content));
+        formattedMessages.push(new AIMessage(textContent));
       }
     }
 

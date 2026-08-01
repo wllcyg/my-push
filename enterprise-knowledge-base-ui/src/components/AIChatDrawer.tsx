@@ -9,7 +9,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
+import { TextStreamChatTransport } from 'ai';
 import { API_BASE_URL } from '../api/client';
 
 interface AIChatDrawerProps {
@@ -21,9 +21,9 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ open, onClose }) => 
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // 使用动态配置的 API_BASE_URL 与可注入 Auth Token 的 DefaultChatTransport
+  // 使用适配 0:"text"\n 格式数据流的 TextStreamChatTransport
   const { messages, sendMessage, status, setMessages } = useChat({
-    transport: new DefaultChatTransport({
+    transport: new TextStreamChatTransport({
       api: `${API_BASE_URL}/agent/chat`,
       headers: (): Record<string, string> => {
         const token = localStorage.getItem('sb_access_token');

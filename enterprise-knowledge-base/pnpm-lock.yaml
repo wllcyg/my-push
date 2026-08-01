@@ -89,6 +89,9 @@ importers:
       exceljs:
         specifier: ^4.4.0
         version: 4.4.0
+      langsmith:
+        specifier: ^0.8.9
+        version: 0.8.9(openai@6.49.0(@aws-sdk/credential-provider-node@3.972.72)(@smithy/signature-v4@5.6.10)(zod@4.4.3))
       mammoth:
         specifier: ^1.12.0
         version: 1.12.0

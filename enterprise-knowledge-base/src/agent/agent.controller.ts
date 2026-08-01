@@ -20,10 +20,10 @@ export class AgentController {
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.setHeader('X-Vercel-AI-Data-Stream', 'v1');
 
-      // 将 AsyncGenerator 产生的文本 Token 逐帧转换为 Vercel AI SDK 格式数据帧：0:"文本"\n
+      // 纯文本流传输 (适配前端 TextStreamChatTransport)
       for await (const textToken of textStream) {
         if (textToken) {
-          res.write(`0:${JSON.stringify(textToken)}\n`);
+          res.write(textToken);
         }
       }
 
