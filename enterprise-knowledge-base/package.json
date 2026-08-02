@@ -114,5 +114,10 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "pnpm": {
+    "overrides": {
+      "get-tsconfig": "4.14.0"
+    }
   }
 }
