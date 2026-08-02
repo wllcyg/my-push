@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import Langfuse, { LangfuseTraceClient } from 'langfuse';
+import Langfuse, { LangfuseTraceClient } from 'langfuse/index.js';
 import { CallbackHandler } from 'langfuse-langchain';
 
 export interface CreateTraceOptions {
