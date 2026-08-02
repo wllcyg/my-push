@@ -44,6 +44,8 @@ export class LangfuseService {
         publicKey,
         secretKey,
         baseUrl,
+        flushAt: 1, // 实时推送模式：产生 1 条事件立刻冲刷发包
+        flushInterval: 1000, // 最长 1 秒强制刷盘
         sessionId: options?.sessionId,
         userId: options?.userId,
         tags: options?.tags || ['enterprise-knowledge-base'],
