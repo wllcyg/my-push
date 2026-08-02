@@ -32,7 +32,23 @@
 $ pnpm install
 ```
 
-### 2. 数据库配置
+### 2. 环境变量与密钥配置 (Infisical)
+
+本项目使用 **Infisical** 统一管理密钥，源码中**无明文 `.env` 凭据**。
+
+新成员启动项目前需完成初始化关联：
+```bash
+# 安装 CLI 并登录
+npm install -g @infisical/cli
+infisical login
+
+# 关联项目 (选择 enterprise-knowledge-base -> dev)
+infisical init
+```
+
+👉 完整指南请参考：[🔐 密钥管理指南 (SECRETS_GUIDE.md)](file:///d:/self/my-push/enterprise-knowledge-base/SECRETS_GUIDE.md)
+
+### 3. 数据库配置
 
 确保本地 Docker 或云数据库已启动（详见后端 Docker 配置或 Supabase / MongoDB Atlas 接入指南）：
 
