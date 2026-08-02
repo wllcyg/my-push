@@ -8,7 +8,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { HttpThrottlerGuard } from './common/guards/http-throttler.guard';
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { DataSource } from 'typeorm';
-import { addTransactionalDataSource } from 'typeorm-transactional';
+import { addTransactionalDataSource, getDataSourceByName } from 'typeorm-transactional';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DocumentModule } from './document/document.module';
@@ -23,9 +23,15 @@ import { AgentModule } from './agent/agent.module';
 import { LlmModule } from './llm/llm.module';
 import { AuthModule } from './auth/auth.module';
 import { LangfuseModule } from './langfuse/langfuse.module';
+import { ChatSessionEntity } from './agent/entities/chat-session.entity';
+import { ChatMessageEntity } from './agent/entities/chat-message.entity';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
+    // 全局 Redis 模块
+    RedisModule,
+
     // LLM 全局基础服务模块与 Langfuse 可观测性模块
     LlmModule,
     LangfuseModule,
@@ -106,6 +112,8 @@ import { LangfuseModule } from './langfuse/langfuse.module';
           CategoryEntity,
           TeamEntity,
           TagEntity,
+          ChatSessionEntity,
+          ChatMessageEntity,
         ],
         synchronize: false,
       }),
@@ -113,7 +121,7 @@ import { LangfuseModule } from './langfuse/langfuse.module';
         if (!options) {
           throw new Error('Invalid options passed to dataSourceFactory');
         }
-        return addTransactionalDataSource(new DataSource(options));
+        return getDataSourceByName('default') || addTransactionalDataSource(new DataSource(options));
       },
     }),
 
