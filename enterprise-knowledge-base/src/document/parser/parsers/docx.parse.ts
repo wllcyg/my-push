@@ -4,7 +4,7 @@ import TurndownService from 'turndown';
 const { gfm } = require('turndown-plugin-gfm') as {
   gfm: (service: TurndownService) => void;
 };
-import { cleanMarkdown } from '../utils/markdown.util';
+import { cleanMarkdown } from '@/document/parser/utils/markdown.util';
 
 export interface ParseDocxOptions {
   /** 是否全量忽略图片 */

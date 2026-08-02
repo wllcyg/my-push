@@ -125,54 +125,91 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ open, onClose }) => 
               />
             </div>
           ) : (
-            messages.map((m) => {
-              const textContent = getMessageContent(m);
-              return (
-                <div
-                  key={m.id}
-                  className={`flex items-start gap-3 ${
-                    m.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-                  }`}
-                >
-                  <Avatar
-                    size={36}
-                    icon={m.role === 'user' ? <UserOutlined /> : <RobotOutlined />}
-                    className={
-                      m.role === 'user'
-                        ? 'bg-indigo-600 shrink-0 shadow-sm'
-                        : 'bg-emerald-600 shrink-0 shadow-sm'
-                    }
-                  />
+            <>
+              {messages.map((m, index) => {
+                const textContent = getMessageContent(m);
+                const isLastAssistantMessage =
+                  m.role === 'assistant' && index === messages.length - 1;
 
+                return (
                   <div
-                    className={`max-w-[85%] px-5 py-4 rounded-2xl text-sm ${
-                      m.role === 'user'
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'bg-white text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_4px_12px_rgba(15,23,42,0.04)]'
+                    key={m.id || index}
+                    className={`flex items-start gap-3 ${
+                      m.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                     }`}
                   >
-                    {/* 支持 Markdown 渲染 */}
-                    {textContent ? (
-                      <div
-                        className={`prose-chat max-w-none break-words ${
-                          m.role === 'user' ? 'prose-chat-invert' : ''
-                        }`}
-                      >
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {textContent}
-                        </ReactMarkdown>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1.5 py-0.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-bounce [animation-delay:-0.3s]" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-bounce [animation-delay:-0.15s]" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-bounce" />
-                      </div>
-                    )}
+                    <Avatar
+                      size={36}
+                      icon={m.role === 'user' ? <UserOutlined /> : <RobotOutlined />}
+                      className={
+                        m.role === 'user'
+                          ? 'bg-indigo-600 shrink-0 shadow-sm'
+                          : 'bg-emerald-600 shrink-0 shadow-sm'
+                      }
+                    />
+
+                    <div
+                      className={`max-w-[85%] px-5 py-4 rounded-2xl text-sm ${
+                        m.role === 'user'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-white text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_4px_12px_rgba(15,23,42,0.04)]'
+                      }`}
+                    >
+                      {/* 支持 Markdown 渲染 */}
+                      {textContent ? (
+                        <div
+                          className={`prose-chat max-w-none break-words ${
+                            m.role === 'user' ? 'prose-chat-invert' : ''
+                          }`}
+                        >
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {textContent}
+                          </ReactMarkdown>
+                          {/* 流式打字生成中的打字机光标动画 */}
+                          {isLoading && isLastAssistantMessage && (
+                            <span className="inline-block w-2 h-4 ml-1 bg-emerald-500 animate-pulse align-middle rounded-sm" />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 py-0.5 text-xs text-slate-400">
+                          <span>AI 正在思考并检索知识库...</span>
+                          <div className="flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.3s]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.15s]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+
+              {/* 当在等待首字响应（意图识别/向量检索阶段），还没有出现 assistant 消息或内容为空时，展示 Loading 思考气泡 */}
+              {isLoading &&
+                (messages.length === 0 ||
+                  messages[messages.length - 1].role === 'user' ||
+                  (messages[messages.length - 1].role === 'assistant' &&
+                    !getMessageContent(messages[messages.length - 1]))) && (
+                  <div className="flex items-start gap-3 flex-row">
+                    <Avatar
+                      size={36}
+                      icon={<RobotOutlined />}
+                      className="bg-emerald-600 shrink-0 shadow-sm"
+                    />
+                    <div className="max-w-[85%] px-5 py-4 rounded-2xl text-sm bg-white text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_4px_12px_rgba(15,23,42,0.04)] flex items-center gap-2.5">
+                      <span className="text-slate-500 text-xs font-medium">
+                        AI 正在思考并检索知识库...
+                      </span>
+                      <div className="flex items-center gap-1.5 py-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.3s]" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.15s]" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+            </>
           )}
         </div>
 

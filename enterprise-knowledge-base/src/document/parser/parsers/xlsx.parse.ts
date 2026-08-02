@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs';
-import { cleanMarkdown, toMarkdownTable } from '../utils/markdown.util';
+import { cleanMarkdown, toMarkdownTable } from '@/document/parser/utils/markdown.util';
 
 /**
  * 将 XLSX / XLS 解析为 Markdown。

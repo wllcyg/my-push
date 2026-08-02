@@ -22,11 +22,13 @@ import { TagEntity } from './dictionary/entities/tag.entity';
 import { AgentModule } from './agent/agent.module';
 import { LlmModule } from './llm/llm.module';
 import { AuthModule } from './auth/auth.module';
+import { LangfuseModule } from './langfuse/langfuse.module';
 
 @Module({
   imports: [
-    // LLM 全局基础服务模块
+    // LLM 全局基础服务模块与 Langfuse 可观测性模块
     LlmModule,
+    LangfuseModule,
 
     // 全局配置加载 .env
     ConfigModule.forRoot({

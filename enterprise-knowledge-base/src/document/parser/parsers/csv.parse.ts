@@ -1,4 +1,4 @@
-import { cleanMarkdown, toMarkdownTable } from '../utils/markdown.util';
+import { cleanMarkdown, toMarkdownTable } from '@/document/parser/utils/markdown.util';
 
 /**
  * 将 CSV 文本 Buffer 解析为 Markdown 表格。
