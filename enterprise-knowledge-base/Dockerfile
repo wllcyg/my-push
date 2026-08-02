@@ -10,7 +10,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # 复制依赖清单并安装
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --frozen-lockfile --ignore-scripts --config.minimum-release-age=0
 
 # 复制源码并编译产物
 COPY . .
@@ -30,7 +30,7 @@ ENV NODE_ENV=production
 
 # 只安装生产依赖，大幅减小镜像体积
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts --config.minimum-release-age=0
 
 # 复制编译产物
 COPY --from=builder /app/dist ./dist
