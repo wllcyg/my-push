@@ -9,16 +9,22 @@ export class AgentController {
 
   @Post('chat')
   async chat(
-    @Body() body: { messages: Array<{ role: string; content: string }> },
+    @Body()
+    body: {
+      messages: Array<{ role: string; content: string }>;
+      sessionId?: string;
+    },
     @Res() res: any,
   ) {
     try {
       const messages = body.messages || [];
-      const textStream = await this.agentService.streamAgentChat(messages);
+      const { textStream, sessionId } = await this.agentService.streamAgentChat(messages, body.sessionId);
 
-      // 设置标准 Vercel AI Data Stream / SSE 协议 Response Header
+      // 设置标准 Vercel AI Data Stream / SSE 协议 Response Header 及 Session ID 暴露 Header
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.setHeader('X-Vercel-AI-Data-Stream', 'v1');
+      res.setHeader('X-Session-Id', sessionId);
+      res.setHeader('Access-Control-Expose-Headers', 'X-Session-Id, X-Vercel-AI-Data-Stream');
 
       // 纯文本流传输 (适配前端 TextStreamChatTransport 与客户端一键中断)
       let clientAborted = false;

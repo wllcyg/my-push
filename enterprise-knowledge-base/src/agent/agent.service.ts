@@ -183,19 +183,36 @@ export class AgentService implements OnModuleInit {
 
   /**
    * 智能 Agent 问答流 (基于 LangGraph StateGraph 状态图引擎驱动)
+   * 支持后端主导的 Session ID 生产与继承
    */
-  async *streamAgentChat(rawMessages: Array<{ role: string; content: string }>): AsyncGenerator<string> {
+  async streamAgentChat(
+    rawMessages: Array<{ role: string; content: string }>,
+    inputSessionId?: string,
+  ): Promise<{ textStream: AsyncGenerator<string>; sessionId: string }> {
     this.logger.log(`🚀 [LangGraph] 收到问答请求，历史对话轮数: ${rawMessages.length}`);
 
-    // 创建该请求专属的 Langfuse Trace Handler
-    const langfuseHandler = this.langfuseService.createCallbackHandler({
+    // 获取最后一条用户输入的自然语言问题
+    const lastUserMsg = [...rawMessages].reverse().find((m) => m?.role === 'user');
+    const userQuery = lastUserMsg?.content || '你好';
+
+    // 后端主导会话 ID 逻辑：未传则由后端自动生成标准 session_xxx，传了则继承
+    const activeSessionId =
+      inputSessionId && inputSessionId.trim() !== ''
+        ? inputSessionId.trim()
+        : `session_${crypto.randomUUID()}`;
+
+    // 创建显式 Root Trace 节点（保证 100% 写入控制台并打上会话 ID 标签）
+    const traceBundle = this.langfuseService.createTraceBundle({
+      name: 'agent-chat',
+      sessionId: activeSessionId,
       tags: ['LangGraph', 'RAG_Agent'],
+      input: { query: userQuery, historyCount: rawMessages.length },
     });
 
-    if (langfuseHandler) {
-      this.logger.log('🔍 [Langfuse Trace] 已成功初始化 Trace CallbackHandler');
-    } else {
-      this.logger.warn('⚠️ [Langfuse Trace] 未能在环境中找到有效 Key，跳过 Tracing 上报');
+    const langfuseHandler = traceBundle?.handler ?? null;
+
+    if (!traceBundle) {
+      this.logger.warn('⚠️ [Langfuse Trace] 未能初始化 Trace Bundle，跳过 Tracing 上报');
     }
 
     // 1. 转换格式化初始消息
@@ -236,45 +253,48 @@ export class AgentService implements OnModuleInit {
       }
     }
 
-    // 2. 复用已编译的 compiledApp 状态图
-    try {
-      const stream = await this.compiledApp.stream(
-        { messages: formattedMessages },
-        {
-          streamMode: 'messages',
-          recursionLimit: 10, // 防止工具调用死循环
-          callbacks: langfuseHandler ? [langfuseHandler] : [],
-        },
-      );
+    // 2. 内部异步生成器
+    const generateStream = async function* (compiledApp: any, logger: any) {
+      let fullAnswer = '';
+      try {
+        const stream = await compiledApp.stream(
+          { messages: formattedMessages },
+          {
+            streamMode: 'messages',
+            recursionLimit: 10,
+            callbacks: langfuseHandler ? [langfuseHandler] : [],
+          },
+        );
 
-      for await (const [message, meta] of stream) {
-        // 提取 rag_agent 或 direct_agent 节点发出的文本消息
-        const nodeName = meta?.langgraph_node;
-        if (
-          (nodeName === 'rag_agent' || nodeName === 'direct_agent') &&
-          message &&
-          typeof message.content === 'string'
-        ) {
-          if (message.content) {
-            yield message.content;
+        for await (const [message, meta] of stream) {
+          const nodeName = meta?.langgraph_node;
+          if (
+            (nodeName === 'rag_agent' || nodeName === 'direct_agent') &&
+            message &&
+            typeof message.content === 'string'
+          ) {
+            if (message.content) {
+              fullAnswer += message.content;
+              yield message.content;
+            }
           }
         }
-      }
-    } catch (error) {
-      this.logger.error(`❌ [LangGraph] 流式推理失败: ${(error as Error).message}`, (error as Error).stack);
-      yield '抱歉，智能助手遇到了一些问题，请稍后重试。';
-    } finally {
-      if (langfuseHandler) {
-        try {
-          await langfuseHandler.flushAsync();
-          this.logger.log('✅ [Langfuse Trace] Trace 上报刷新完毕 (Flush)');
-        } catch (flushErr) {
-          this.logger.error(
-            `❌ [Langfuse Trace] Flush 网络上报失败: ${(flushErr as Error).message}`,
-          );
+      } catch (error) {
+        logger.error(`❌ [LangGraph] 流式推理失败: ${(error as Error).message}`, (error as Error).stack);
+        yield '抱歉，智能助手遇到了一些问题，请稍后重试。';
+      } finally {
+        if (traceBundle) {
+          traceBundle.trace.update({
+            output: { answer: fullAnswer || '无输出' },
+          });
+          await traceBundle.flush();
         }
       }
-    }
+    };
+
+    return {
+      textStream: generateStream(this.compiledApp, this.logger),
+      sessionId: activeSessionId,
+    };
   }
 }
-

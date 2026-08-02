@@ -20,6 +20,8 @@ interface AIChatDrawerProps {
 
 export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ open, onClose }) => {
   const [input, setInput] = useState('');
+  // 维护由后端分配/透传的唯一 Session ID（初始为空，由后端首轮响应返回并继承）
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // 使用 useChat 的 stop 方法，支持客户端中断 HTTP 流式连接 (AbortController)
@@ -29,6 +31,17 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ open, onClose }) => 
       headers: (): Record<string, string> => {
         const token = localStorage.getItem('sb_access_token');
         return token ? { Authorization: `Bearer ${token}` } : {};
+      },
+      // 向后端发送请求时带着当前维持的 sessionId
+      body: sessionId ? { sessionId } : {},
+      // 拦截后端的 Response Header，捕获后端自动发出的 X-Session-Id
+      fetch: async (url, init) => {
+        const res = await fetch(url, init);
+        const serverSessionId = res.headers.get('X-Session-Id');
+        if (serverSessionId) {
+          setSessionId(serverSessionId);
+        }
+        return res;
       },
     }),
   });
@@ -44,6 +57,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ open, onClose }) => 
 
   const handleClear = () => {
     setMessages([]);
+    setSessionId(null); // 清空对话时重置，由后端在下一轮发消息时重新生产新会话 ID
   };
 
   const onSubmit = (e?: React.FormEvent) => {
