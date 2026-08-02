@@ -6,10 +6,10 @@ import { StateGraph, Annotation, START, END, CompiledStateGraph } from '@langcha
 import { ToolNode, toolsCondition } from '@langchain/langgraph/prebuilt';
 import { z } from 'zod';
 import { RunnableConfig } from '@langchain/core/runnables';
-import { createKnowledgeRetrieverTool } from '@/agent/tools/knowledge-retriever.tool';
-import { EmbeddingService } from '@/document/services/embedding.service';
-import { LlmService } from '@/llm/llm.service';
-import { LangfuseService } from '@/langfuse/langfuse.service';
+import { createKnowledgeRetrieverTool } from './tools/knowledge-retriever.tool';
+import { EmbeddingService } from '../document/services/embedding.service';
+import { LlmService } from '../llm/llm.service';
+import { LangfuseService } from '../langfuse/langfuse.service';
 
 /** 定义意图分类 Schema */
 const IntentSchema = z.object({
