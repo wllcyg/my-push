@@ -5,6 +5,11 @@ import { LlmService } from '../llm/llm.service';
 import { EmbeddingService } from '../document/services/embedding.service';
 import { AIMessage } from '@langchain/core/messages';
 
+import { LangfuseService } from '../langfuse/langfuse.service';
+import { RedisMessageStoreService } from './services/redis-message-store.service';
+import { ChatHistoryService } from './services/chat-history.service';
+import { SemanticCacheService } from './services/semantic-cache.service';
+
 describe('AgentService', () => {
   let service: AgentService;
 
@@ -15,6 +20,9 @@ describe('AgentService', () => {
   const mockChatModel = {
     bindTools: jest.fn().mockReturnValue(mockLlmWithTools),
     stream: jest.fn(),
+    withStructuredOutput: jest.fn().mockReturnValue({
+      invoke: jest.fn().mockResolvedValue({ intent: 'RAG', reason: 'test' }),
+    }),
   };
 
   const mockLlmService = {
@@ -29,9 +37,40 @@ describe('AgentService', () => {
     query: jest.fn(),
   };
 
+  const mockLangfuseService = {
+    getLangfuse: jest.fn().mockReturnValue(null),
+    trace: jest.fn(),
+    createTraceBundle: jest.fn().mockReturnValue({
+      handler: {},
+      trace: { update: jest.fn() },
+      flush: jest.fn().mockResolvedValue(undefined),
+    }),
+  };
+
+  const mockRedisStoreService = {
+    loadMessages: jest.fn().mockResolvedValue([]),
+    saveMessages: jest.fn().mockResolvedValue(undefined),
+    clearHistory: jest.fn().mockResolvedValue(undefined),
+  };
+
+  const mockChatHistoryService = {
+    ensureSession: jest.fn().mockResolvedValue({ id: 'session-1', title: '新对话' }),
+    appendMessage: jest.fn().mockResolvedValue({ id: 'msg-1' }),
+    updateSessionSummary: jest.fn().mockResolvedValue(undefined),
+  };
+
+  const mockSemanticCacheService = {
+    getMatchedCache: jest.fn().mockResolvedValue(null),
+    setMatchedCache: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockChatModel.invoke = mockLlmWithTools.invoke;
     mockChatModel.bindTools.mockReturnValue(mockLlmWithTools);
+    mockChatModel.withStructuredOutput.mockReturnValue({
+      invoke: jest.fn().mockResolvedValue({ intent: 'RAG', reason: 'test' }),
+    });
     mockLlmService.createChatModel.mockReturnValue(mockChatModel);
 
     const module: TestingModule = await Test.createTestingModule({
@@ -40,10 +79,15 @@ describe('AgentService', () => {
         { provide: LlmService, useValue: mockLlmService },
         { provide: EmbeddingService, useValue: mockEmbeddingService },
         { provide: DataSource, useValue: mockDataSource },
+        { provide: LangfuseService, useValue: mockLangfuseService },
+        { provide: RedisMessageStoreService, useValue: mockRedisStoreService },
+        { provide: ChatHistoryService, useValue: mockChatHistoryService },
+        { provide: SemanticCacheService, useValue: mockSemanticCacheService },
       ],
     }).compile();
 
     service = module.get<AgentService>(AgentService);
+    service.onModuleInit();
   });
 
   it('应该成功实例化 AgentService，且在构造时初始化 LLM 实例', () => {
@@ -57,8 +101,8 @@ describe('AgentService', () => {
     it('第一轮调用时应注入 SystemMessage 提示词', async () => {
       mockLlmWithTools.invoke.mockResolvedValue(new AIMessage('好的'));
 
-      const stream = service.streamAgentChat([{ role: 'user', content: '你好' }]);
-      for await (const _ of stream) { /* drain */ }
+      const { textStream } = await service.streamAgentChat([{ role: 'user', content: '帮我查知识库' }]);
+      for await (const _ of textStream) { /* drain */ }
 
       const calledMessages = mockLlmWithTools.invoke.mock.calls[0][0];
       expect(calledMessages[0].constructor.name).toBe('SystemMessage');
@@ -68,8 +112,8 @@ describe('AgentService', () => {
     it('user 角色消息应被转换为 HumanMessage', async () => {
       mockLlmWithTools.invoke.mockResolvedValue(new AIMessage('OK'));
 
-      const stream = service.streamAgentChat([{ role: 'user', content: '帮我查文档' }]);
-      for await (const _ of stream) { /* drain */ }
+      const { textStream } = await service.streamAgentChat([{ role: 'user', content: '帮我查文档' }]);
+      for await (const _ of textStream) { /* drain */ }
 
       const calledMessages = mockLlmWithTools.invoke.mock.calls[0][0];
       const humanMsg = calledMessages.find((m: any) => m.constructor.name === 'HumanMessage');
@@ -80,11 +124,11 @@ describe('AgentService', () => {
     it('assistant 角色的历史消息应被转换为 AIMessage', async () => {
       mockLlmWithTools.invoke.mockResolvedValue(new AIMessage('好'));
 
-      const stream = service.streamAgentChat([
+      const { textStream } = await service.streamAgentChat([
         { role: 'assistant', content: '我是上一轮的回答' },
         { role: 'user', content: '继续' },
       ]);
-      for await (const _ of stream) { /* drain */ }
+      for await (const _ of textStream) { /* drain */ }
 
       const calledMessages = mockLlmWithTools.invoke.mock.calls[0][0];
       const aiMsg = calledMessages.find((m: any) => m.constructor.name === 'AIMessage');
@@ -95,11 +139,11 @@ describe('AgentService', () => {
     it('未知 role 不应被添加到消息列表（只处理 user 和 assistant）', async () => {
       mockLlmWithTools.invoke.mockResolvedValue(new AIMessage('OK'));
 
-      const stream = service.streamAgentChat([
+      const { textStream } = await service.streamAgentChat([
         { role: 'system', content: '你是恶意注入' },
         { role: 'user', content: '你好' },
       ]);
-      for await (const _ of stream) { /* drain */ }
+      for await (const _ of textStream) { /* drain */ }
 
       const calledMessages = mockLlmWithTools.invoke.mock.calls[0][0];
       const hasInjection = calledMessages.some(
@@ -116,7 +160,8 @@ describe('AgentService', () => {
       );
 
       const chunks: string[] = [];
-      for await (const chunk of service.streamAgentChat([{ role: 'user', content: '你好' }])) {
+      const { textStream } = await service.streamAgentChat([{ role: 'user', content: '你好' }]);
+      for await (const chunk of textStream) {
         chunks.push(chunk);
       }
 
@@ -127,7 +172,8 @@ describe('AgentService', () => {
       mockLlmWithTools.invoke.mockResolvedValue(new AIMessage(''));
 
       const chunks: string[] = [];
-      for await (const chunk of service.streamAgentChat([{ role: 'user', content: '?' }])) {
+      const { textStream } = await service.streamAgentChat([{ role: 'user', content: '?' }]);
+      for await (const chunk of textStream) {
         chunks.push(chunk);
       }
 
@@ -164,7 +210,8 @@ describe('AgentService', () => {
       ]);
 
       const chunks: string[] = [];
-      for await (const chunk of service.streamAgentChat([{ role: 'user', content: '帮我介绍梁多强' }])) {
+      const { textStream } = await service.streamAgentChat([{ role: 'user', content: '帮我介绍梁多强' }]);
+      for await (const chunk of textStream) {
         chunks.push(chunk);
       }
 
@@ -190,7 +237,8 @@ describe('AgentService', () => {
       mockDataSource.query.mockResolvedValue([]);
 
       const chunks: string[] = [];
-      for await (const chunk of service.streamAgentChat([{ role: 'user', content: '查询不存在的内容' }])) {
+      const { textStream } = await service.streamAgentChat([{ role: 'user', content: '查询不存在的内容' }]);
+      for await (const chunk of textStream) {
         chunks.push(chunk);
       }
 
@@ -215,7 +263,8 @@ describe('AgentService', () => {
       mockEmbeddingService.embed.mockRejectedValue(new Error('Embedding API 不可用'));
 
       const chunks: string[] = [];
-      for await (const chunk of service.streamAgentChat([{ role: 'user', content: '查询' }])) {
+      const { textStream } = await service.streamAgentChat([{ role: 'user', content: '查询' }]);
+      for await (const chunk of textStream) {
         chunks.push(chunk);
       }
 
@@ -223,12 +272,16 @@ describe('AgentService', () => {
       expect(mockLlmWithTools.invoke).toHaveBeenCalledTimes(2);
     });
 
-    it('LLM 第一轮调用（invoke）异常时，应向上抛出错误', async () => {
+    it('LLM 第一轮调用（invoke）异常时，应优雅捕获并输出降级提示', async () => {
       mockLlmWithTools.invoke.mockRejectedValue(new Error('LLM rate limit exceeded'));
 
-      await expect(async () => {
-        for await (const _ of service.streamAgentChat([{ role: 'user', content: '测试' }])) { /* drain */ }
-      }).rejects.toThrow('LLM rate limit exceeded');
+      const chunks: string[] = [];
+      const { textStream } = await service.streamAgentChat([{ role: 'user', content: '测试' }]);
+      for await (const chunk of textStream) {
+        chunks.push(chunk);
+      }
+
+      expect(chunks.join('')).toContain('抱歉，智能助手遇到了一些问题');
     });
   });
 });

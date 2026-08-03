@@ -34,6 +34,27 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ open, onClose }) => 
       },
       // 向后端发送请求时带着当前维持的 sessionId
       body: sessionId ? { sessionId } : {},
+      // 自定义请求 Body：仅发送最新的用户提问 (query) 和 sessionId，完全由后端 Redis 托管历史记忆
+      prepareSendMessagesRequest: ({ messages, body }: any) => {
+        const lastUserMsg = [...messages].reverse().find((m: any) => m.role === 'user');
+        const getMessageText = (m: any) => {
+          if (typeof m?.content === 'string') return m.content;
+          if (Array.isArray(m?.parts)) {
+            return m.parts
+              .filter((p: any) => p.type === 'text')
+              .map((p: any) => p.text)
+              .join('');
+          }
+          return '';
+        };
+        const query = lastUserMsg ? getMessageText(lastUserMsg) : '';
+        return {
+          body: {
+            ...body,
+            query,
+          },
+        };
+      },
       // 拦截后端的 Response Header，捕获后端自动发出的 X-Session-Id
       fetch: async (url, init) => {
         const res = await fetch(url, init);
