@@ -127,6 +127,12 @@ export class AgentService implements OnModuleInit {
       // 预处理 query：去除首尾空格及末尾常见的语气词和标点
       const normalizedQuery = userQuery.trim().replace(/[？\?！!。，,呢啊呀吗吧]+$/g, '');
 
+      // 强硬规则：只要包含画图/图表/数据可视化关键词，绝对走 RAG/技能分支，严禁走 DIRECT
+      if (/[画图表对比趋势占比折线饼图柱状漏斗雷达]/.test(normalizedQuery)) {
+        this.logger.log(`🎯 [IntentRouter] 触发绘图硬规则 => 强制走向 RAG/技能分支`);
+        return { intent: 'RAG' as const };
+      }
+
       // 极速硬规则正则过滤：对于超短常见的打招呼/时间/感谢词，0 延迟直接判定为 DIRECT
       if (/^(你好|您好|hi|hello|hey|谢谢|感谢|你是谁|自我介绍|再见|bye|今天几号|今天是几号|分析一下今天是几号|几月几号|几点|当前时间|今天星期几)$/i.test(normalizedQuery)) {
         this.logger.log(`🎯 [IntentRouter] 触发硬规则匹配 => DIRECT (免去 LLM 分类)`);
@@ -140,7 +146,7 @@ export class AgentService implements OnModuleInit {
 
         const result = await structuredClassifier.invoke(
           [
-            new SystemMessage('你是一个专业的企业 AI 助手意图路由分类器。分析用户问题，判定是否需要检索知识库。'),
+            new SystemMessage('你是一个专业的企业 AI 助手意图路由分类器。分析用户问题，判定是否需要检索知识库或使用专业技能。若涉及画图、图表或数据展示，必须选择 RAG。'),
             new HumanMessage(userQuery || '你好'),
           ],
           config, // 👈 关键点：将 RunnableConfig 透传给 LLM
@@ -180,28 +186,22 @@ export class AgentService implements OnModuleInit {
       return { messages: [response] };
     };
 
-    // 3. 纯 Chat 直连回答节点 (透传 config 给底层 llm.invoke)
+    // 3. 纯 Chat 直连回答节点 (保留初始 SystemMessage，确保包含完整的 Skill 强约束)
     const callDirectNode = async (
       state: typeof AgentState.State,
       config?: RunnableConfig,
     ) => {
-      // 过滤旧的系统提示词，防止提示词重复堆叠并精简输入
-      const nonSystemMessages = state.messages.filter((m) => m._getType() !== 'system');
-      const directMessages = [
-        new SystemMessage(
-          '你是一个专业、严谨的企业 AI 智能助手。对于用户的日常打招呼、时间日期询问、感谢或通用问题，请直接礼貌回答，无需使用或提及知识检索工具。\n' +
-            `当前系统时间：${getCurrentTimeFormatted()}`,
-        ),
-        ...nonSystemMessages,
-      ];
-      const response = await this.mainLlm.invoke(directMessages, config);
+      const lastMsg = [...state.messages].reverse().find((m) => m._getType() === 'human');
+      const isDrawingHit = lastMsg && /[画图表对比趋势占比折线饼图柱状漏斗雷达]/.test(String(lastMsg.content));
+      const targetLlm = isDrawingHit ? this.fastLlm : this.mainLlm;
+
+      // 保留完整的 state.messages (其中头部包含了完整的 SystemMessage 以及激活的 Skill 强约束)
+      const response = await targetLlm.invoke(state.messages, config);
       return { messages: [response] };
     };
 
     // Tools 自动执行节点
     const toolsNode = new ToolNode(this.tools);
-
-
 
     // 构建带路由分支的 LangGraph 状态图
     const workflow = new StateGraph(AgentState)
@@ -274,8 +274,8 @@ export class AgentService implements OnModuleInit {
           yield semanticCachedAnswer;
         };
         // 异步记录问答明细到 PostgreSQL 数据库
-        this.chatHistoryService.appendMessage(activeSessionId, 'user', userQuery).catch(() => {});
-        this.chatHistoryService.appendMessage(activeSessionId, 'assistant', semanticCachedAnswer).catch(() => {});
+        this.chatHistoryService.appendMessage(activeSessionId, 'user', userQuery).catch(() => { });
+        this.chatHistoryService.appendMessage(activeSessionId, 'assistant', semanticCachedAnswer).catch(() => { });
 
         return {
           textStream: fastStream(),
@@ -303,17 +303,25 @@ export class AgentService implements OnModuleInit {
     // 2. 根据用户当前提问按需精准匹配出需要激活的 Skill 详细 Markdown 规则
     const matchedSkills = this.skillRegistryService.getMatchedSkillBodies(userQuery);
 
+    // 如果匹配到了特定 Skill，添加最高优先级的覆盖指令 (Override Directive)
+    const skillOverrideDirective = matchedSkills
+      ? '\n\n🚨🚨🚨【最高优先级强指令 - 覆盖默认行为】🚨🚨🚨\n' +
+      '当前用户提问已精确触发了系统专有技能 (Skill)。你必须 100% 无条件且严格遵守下方 Skill 文件的格式与交互规范！\n' +
+      '【特别警告】：若属于图表/画图/数据可视化需求，绝对禁止提供 Python/matplotlib 代码，绝对禁止要求用户本地运行脚本，必须直接且仅输出 ```json:echarts 动态图表代码块以供前端组件直接渲染！'
+      : '';
+
     // 构建 SystemMessage 头部（保持高频命中的静态前缀）
     const systemPromptMessage = new SystemMessage(
       '你是一个专业、严谨的企业 AI 智能助手。你的目标是帮助用户回答技术、业务、文档、员工规范及实时资讯相关问题。\n' +
-        `当前系统时间：${getCurrentTimeFormatted()}\n` +
-        '规则：\n' +
-        '1. 当用户的问题涉及企业具体技术、文档规范、简历或业务内容时，你必须且优先调用 `knowledge_retriever` 工具在知识库中进行向量检索。\n' +
-        '2. 如果本地知识库未检索到相关内容，或者用户询问最新外部新闻、实时技术文档、开源库最新动态或实时信息时，请调用 `web_search` 工具进行互联网搜索。\n' +
-        '3. 基于检索到的切片或网页结果准确作答，并在回答中以 `[1]`、`[2]` 角标标注出处。\n' +
-        '4. 若本地库和联网搜索均未找到相关信息，请诚实告知用户，不要胡乱编造。' +
-        (skillManifest ? `\n${skillManifest}` : '') +
-        (matchedSkills ? `\n\n${matchedSkills}` : ''),
+      `当前系统时间：${getCurrentTimeFormatted()}\n` +
+      '规则：\n' +
+      '1. 当用户的问题涉及企业具体技术、文档规范、简历或业务内容时，你必须且优先调用 `knowledge_retriever` 工具在知识库中进行向量检索。\n' +
+      '2. 如果本地知识库未检索到相关内容，或者用户询问最新外部新闻、实时技术文档、开源库最新动态或实时信息时，请调用 `web_search` 工具进行互联网搜索。\n' +
+      '3. 基于检索到的切片或网页结果准确作答，并在回答中以 `[1]`、`[2]` 角标标注出处。\n' +
+      '4. 若本地库和联网搜索均未找到相关信息，请诚实告知用户，不要胡乱编造。' +
+      (skillManifest ? `\n${skillManifest}` : '') +
+      skillOverrideDirective +
+      (matchedSkills ? `\n\n${matchedSkills}` : ''),
     );
 
 
@@ -396,13 +404,13 @@ export class AgentService implements OnModuleInit {
           8,
           (summaryText) => {
             // 当触发 LLM 摘要时，异步更新 Supabase PostgreSQL 中的会话总结字段
-            historyService.updateSessionSummary(activeSessionId, summaryText).catch(() => {});
+            historyService.updateSessionSummary(activeSessionId, summaryText).catch(() => { });
           },
         );
 
         // 写回语义缓存（仅针对单轮通用独立提问，7 天 TTL 防爆）
         if (fullAnswer && !isSessionDependentQuery) {
-          cacheService.setMatchedCache(userQuery, fullAnswer).catch(() => {});
+          cacheService.setMatchedCache(userQuery, fullAnswer).catch(() => { });
         }
 
         // 异步持久化问答明细到 Supabase PostgreSQL (长期记忆)

@@ -1,6 +1,6 @@
 # 企业知识库 - 全链路系统架构与技术文档
 
-本文档详细阐述企业知识库系统的核心架构设计、数据模型、全链路代码实现细节，涵盖**前端 R2 直传、异步消息队列处理、双库协同落盘、pgvector 向量切片、LLM 基础设施抽象、RAG AI Agent 智能问答及 Supabase Auth 身份认证**。
+本文档详细阐述企业知识库系统的核心架构设计、数据模型、全链路代码实现细节，涵盖**前端 R2 直传、异步消息队列处理、双库协同落盘、pgvector 向量切片、LLM 基础设施抽象、RAG AI Agent 智能问答、Dynamic Agent Skill 扩展机制及 Supabase Auth 身份认证**。
 
 ---
 
@@ -18,9 +18,14 @@
    - **PostgreSQL (`kh_document_chunk`)**：独立的向量切片表（包含 HNSW 索引与 1536 维 `vector` 数据，1:N 关联主文档）。
 4. **LLM 基础设施抽离 (`LlmModule`)**：
    - 提取全局 `LlmService` 统一管理 `ChatOpenAI` / 阿里云百炼大模型客户端的配置、实例化与参数调控。
-5. **RAG Agent 智能问答 (`AgentModule`)**：
-   - 基于 LangChain 工具调用范式，通过 `createKnowledgeRetrieverTool` 在 pgvector 中执行 Cosine 余弦距离匹配，并将排序上下文流式（SSE）返回前端。
-6. **Supabase 身份认证与安全防护 (`AuthModule`)**：
+5. **RAG Agent 智能问答与 LangGraph 路由 (`AgentModule`)**：
+   - 基于 LangGraph 构建状态图（StateGraph），包含硬规则+小模型极速意图分类路由（`RAG` 分支 vs `DIRECT` 直答分支）。
+   - 解耦依赖注入多工具集合（`AGENT_TOOLS`）：包含 `knowledge_retriever` pgvector 相似度搜索工具与 `web_search` 互联网搜索工具。
+6. **Dynamic Agent Skill 动态扩展机制 (`SkillRegistryModule`)**：
+   - **轻量预知 + 按需动态激活**：启动时扫描预加载扩展 Skill（如 `echarts-visualization` 绘图技能）。
+   - 在 Prompt 中采用两阶段注入模式（全量 Skill 结构 Manifest 预知 ➔ 用户提问关键词精准匹配并载入 Skill Markdown 规范）。
+   - **绘图极速模型切换 (`fastLlm`)**：识别画图/图表对比等意图时，动态激活 `qwen-turbo` 极速模型，提速 3~5 倍输出标准 ECharts 图表，配合前端 `echarts-for-react` 实现极速渲染。
+7. **Supabase 身份认证与安全防护 (`AuthModule`)**：
    - 接入 Supabase Auth 进行身份鉴权，结合 `HttpThrottlerGuard` 全局限流（120次/分）与 Winston 统一日志追踪。
 
 ---
@@ -56,7 +61,7 @@ flowchart TD
     J -->|16. 批量保存切块向量| M[(PostgreSQL kh_document_chunk)]
 ```
 
-### 2.2 Agent RAG 智能问答流图
+### 2.2 Agent RAG 智能问答与 Skill 调度流图
 
 ```mermaid
 sequenceDiagram
@@ -64,26 +69,40 @@ sequenceDiagram
     participant Client as 前端 App / AI 抽屉
     participant AgentCtrl as AgentController
     participant AgentSvc as AgentService
-    participant LLM as LlmService (ChatOpenAI)
-    participant Tool as knowledge_retriever Tool
-    participant Embed as EmbeddingService
+    participant SkillReg as SkillRegistryService
+    participant LLM as LlmService (ChatOpenAI / Fast LLM)
+    participant Tool as Multi-Tools (retriever / web_search)
     participant PG as PostgreSQL (pgvector)
 
     Client->>AgentCtrl: POST /agent/chat/stream { messages }
     AgentCtrl->>AgentSvc: streamAgentChat(messages)
-    AgentSvc->>LLM: bindTools([knowledge_retriever]).stream(messages)
     
-    opt LLM 判定需要检索知识库
-        LLM-->>Tool: 触发调用 knowledge_retriever(query)
-        Tool->>Embed: embed(query) 转换为 1536维向量
-        Embed-->>Tool: 返回 Float[] 向量
-        Tool->>PG: SELECT ... (c.embedding <=> $1::vector) LIMIT 4
-        PG-->>Tool: 返回相似度最高的 4 个文本片段及文档标题
-        Tool-->>LLM: 返回格式化上下文【知识片段 1..4】
+    AgentSvc->>SkillReg: 1. 获取 Skill Manifest 预知清单
+    AgentSvc->>SkillReg: 2. 匹配 Query 关键词加载对应 Skill 规则 (如 echarts)
+    SkillReg-->>AgentSvc: 返回组合后的 SystemPrompt (含技能规则)
+
+    alt 绘图类需求 (折线/饼图/柱状图)
+        AgentSvc->>AgentSvc: 自动激活 fastLlm (qwen-turbo 极速模型)
+    else 复合通用 RAG 问答
+        AgentSvc->>AgentSvc: 使用 mainLlm (qwen3.6-plus 主模型)
     end
 
-    LLM-->>AgentSvc: 最终文本流 (Stream Chunk)
-    AgentSvc-->>Client: SSE 实时流式输出作答与引文角标 [1][2]
+    AgentSvc->>LLM: LangGraph StateGraph 执行 (intent_router -> rag_agent / direct_agent)
+    
+    opt LLM 判定需要调用工具
+        alt 本地知识库检索
+            LLM-->>Tool: 调用 knowledge_retriever(query)
+            Tool->>PG: 余弦距离相似度搜索 Top-4 文本切片
+            PG-->>Tool: 返回切片结果
+        else 互联网搜索
+            LLM-->>Tool: 调用 web_search(query)
+            Tool-->>Tool: 抓取网页并提取关键摘要
+        end
+        Tool-->>LLM: 回传工具结果，进入二次思考生成
+    end
+
+    LLM-->>AgentSvc: 流式返回回答 / json:echarts 代码块
+    AgentSvc-->>Client: SSE 实时流式输出 (包含引文角标 [1] 及前端动态 ECharts 图表渲染)
 ```
 
 ---
@@ -101,8 +120,10 @@ sequenceDiagram
 | **Document 文档** | `EmbeddingService.embedBatch` | [embedding.service.ts](file:///Users/moliang/Desktop/coder/my-push/enterprise-knowledge-base/src/document/services/embedding.service.ts) | 批量向量计算服务 (阿里百炼 text-embedding-v4 / L2 归一化离线 Mock) |
 | **Document 文档** | `DocumentVectorConsumer.handleDocumentVectorize` | [document-vector.consumer.ts](file:///Users/moliang/Desktop/coder/my-push/enterprise-knowledge-base/src/document/consumers/document-vector.consumer.ts) | MQ 消费节点：切片向量化计算并写入 Postgres 向量数据表 |
 | **LLM 基础设施** | `LlmService.createChatModel` | [llm.service.ts](file:///Users/moliang/Desktop/coder/my-push/enterprise-knowledge-base/src/llm/llm.service.ts) | 全局统一 LLM 工厂服务，解耦模型参数配置与实例化逻辑 |
-| **Agent 智脑** | `AgentService.streamAgentChat` | [agent.service.ts](file:///Users/moliang/Desktop/coder/my-push/enterprise-knowledge-base/src/agent/agent.service.ts) | Agent 对话入口，组装 SystemMessage 与 Tool 流式生成回答 |
-| **Agent 智脑** | `createKnowledgeRetrieverTool` | [knowledge-retriever.tool.ts](file:///Users/moliang/Desktop/coder/my-push/enterprise-knowledge-base/src/agent/tools/knowledge-retriever.tool.ts) | 向量检索工具：基于 PostgreSQL pgvector 余弦距离近邻搜索 |
+| **Agent 智脑** | `AgentService.streamAgentChat` | [agent.service.ts](file:///Users/moliang/Desktop/coder/my-push/enterprise-knowledge-base/src/agent/agent.service.ts) | Agent 对话入口，组装 SystemMessage、路由控制与 Tool 流式生成回答 |
+| **Agent 智脑** | `SkillRegistryService` | [skill-registry.service.ts](file:///Users/moliang/Desktop/coder/my-push/enterprise-knowledge-base/src/agent/services/skill-registry.service.ts) | Skill 解析器与预载注册表，提取 YAML 元数据并实现按需特征匹配 |
+| **Agent 工具** | `createKnowledgeRetrieverTool` | [knowledge-retriever.tool.ts](file:///Users/moliang/Desktop/coder/my-push/enterprise-knowledge-base/src/agent/tools/knowledge-retriever.tool.ts) | 向量检索工具：基于 PostgreSQL pgvector 余弦距离近邻搜索 |
+| **Agent 工具** | `WebSearchTool` | [web-search.tool.ts](file:///Users/moliang/Desktop/coder/my-push/enterprise-knowledge-base/src/agent/tools/web-search.tool.ts) | 联网搜索工具：当本地知识库缺省时补充互联网最新实时数据 |
 | **Auth 认证** | `AuthService.login` | [auth.service.ts](file:///Users/moliang/Desktop/coder/my-push/enterprise-knowledge-base/src/auth/auth.service.ts) | Supabase Auth 身份认证、Token 签发与预设管理员账户支持 |
 | **Dictionary 字典**| `DictionaryService` | [dictionary.service.ts](file:///Users/moliang/Desktop/coder/my-push/enterprise-knowledge-base/src/dictionary/dictionary.service.ts) | 管理分类 (Category)、团队 (Team)、标签 (Tag) 元数据维表 |
 
@@ -157,14 +178,47 @@ sequenceDiagram
 
 ---
 
-## 5. 容量评估与 RAG 检索性能分析
+## 5. Agent 扩展技能 (Skill System) 与 ECharts 可视化架构
 
-### 5.1 向量表独立设计的优势
+系统支持标准化的 Agent 技能 (Skill) 扩展体系，通过将专业领域的 Prompt 规整、代码输出规范与模版解耦为独立 Skill 文件，实现可扩展的 AI 能力：
+
+### 5.1 Skill 机制运行原理
+
+```
+【 .agents/skills/xxx/SKILL.md 】
+        │ (系统启动)
+        ▼ 
+ 1. SkillRegistryService 解析 YAML Frontmatter (提取 name, description, keywords)
+        │
+        ▼ 
+ 2. 构造轻量 Skill Manifest 提示词前缀，告知大模型具备哪些专业技能
+        │ (用户提问: "帮我画一个上个月销售额对比饼图")
+        ▼ 
+ 3. 正则与语义关键词判定 ➔ 命中 "echarts-visualization" 技能
+        │
+        ▼ 
+ 4. 将全量 Skill Markdown 指令组装进 SystemPrompt，要求大模型输出 ```json:echarts 结构
+        │
+        ▼ 
+ 5. 前端 ReactECharts (echarts-for-react) 捕获该代码块，渲染高颜值交互式图表
+```
+
+### 5.2 优势与性能优化
+1. **Token 节省与性能保持**：只有在用户输入涉及相关领域（如“画图/对比/占比/折线图”）时才完整载入特定 Skill Body，避免给无关问答带来巨大的 Prompt Token 负担。
+2. **极速推理模式 (`fastLlm`)**：触发绘图需求时自动切换至 `qwen-turbo` 模型，在保证 JSON 规范度的同时将代码输出速度提升 **3~5 倍**。
+3. **前端渲染无缝配合**：前端 AI 抽屉解析 SSE 返回的流式 markdown，识别 `json:echarts` 并由 `ReactECharts` 自动呈现动效图表。
+
+---
+
+## 6. 容量评估与 RAG 检索性能分析
+
+### 6.1 向量表独立设计的优势
 1. **精准粒度检索**：在 RAG 问答中，LLM 的 Context Window 极为珍贵。通过将文档切分为 300~800 字的切片，能够实现段落级别的精准命中。
 2. **高性能 Similarity Search**：基于 pgvector 的 `<=>` Cosine 相似度计算，结合 HNSW (Hierarchical Navigable Small World) 索引，Top-K 检索延迟仅为 **5~15ms**。
 3. **软删除与级联清理**：通过 TypeORM 设定的 `ON DELETE CASCADE`，当主文档删除时，其绑定的所有向量切片自动清理，避免产生无主孤儿向量。
 
-### 5.2 存储空间物理预估
+### 6.2 存储空间物理预估
 - **10,000 篇文档** ➔ 产生约 **100,000 条向量切片**。
 - 单条向量 (1536 维 32-bit float = 6 KB) + 文本及 Metadata (1 KB) 约 **7 KB**。
 - 10 万条切片数据物理占存仅约 **700 MB**，极度轻量且易于云端扩展维护。
+

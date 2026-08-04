@@ -20,6 +20,40 @@ interface AIChatDrawerProps {
   onClose: () => void;
 }
 
+// 抽离独立的 ECharts 渲染组件，使用 React.memo 隔离父组件 input 变动引发的不必要重绘
+const EChartsBlock: React.FC<{ optionStr: string }> = React.memo(({ optionStr }) => {
+  const option = React.useMemo(() => {
+    try {
+      const parsed = JSON.parse(optionStr);
+      parsed.backgroundColor = 'transparent';
+      return parsed;
+    } catch (e) {
+      return null;
+    }
+  }, [optionStr]);
+
+  if (!option) {
+    return (
+      <div className="my-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-400 flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
+        <span>AI 正在渲染动态图表...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="my-4 p-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden min-w-[320px]">
+      <ReactECharts
+        option={option}
+        style={{ height: '340px', width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+        notMerge={true}
+        lazyUpdate={true}
+      />
+    </div>
+  );
+});
+
 export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ open, onClose }) => {
   const [input, setInput] = useState('');
   // 维护由后端分配/透传的唯一 Session ID（初始为空，由后端首轮响应返回并继承）
@@ -102,6 +136,22 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ open, onClose }) => 
     }
     return '';
   };
+
+  // 记忆化 ReactMarkdown 组件映射表，防止每次输入框受控渲染时重建匿名函数导致的节点刷新
+  const markdownComponents = React.useMemo(() => ({
+    code({ node, inline, className, children, ...props }: any) {
+      const match = /language-json:echarts/.exec(className || '');
+      if (!inline && match) {
+        const optionStr = String(children).replace(/\n$/, '');
+        return <EChartsBlock optionStr={optionStr} />;
+      }
+      return (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
+    },
+  }), []);
 
   return (
     <Drawer
@@ -201,41 +251,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ open, onClose }) => 
                         >
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
-                            components={{
-                              code({ node, inline, className, children, ...props }: any) {
-                                const match = /language-json:echarts/.exec(className || '');
-                                if (!inline && match) {
-                                  try {
-                                    const optionStr = String(children).replace(/\n$/, '');
-                                    const option = JSON.parse(optionStr);
-                                    // 强制将图表背景设为透明，杜绝出现黑色大方块
-                                    option.backgroundColor = 'transparent';
-                                    return (
-                                      <div className="my-4 p-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden min-w-[320px]">
-                                        <ReactECharts
-                                          option={option}
-                                          style={{ height: '340px', width: '100%' }}
-                                          opts={{ renderer: 'canvas' }}
-                                        />
-                                      </div>
-                                    );
-
-                                  } catch (e) {
-                                    return (
-                                      <div className="my-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-400 flex items-center gap-2">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
-                                        <span>AI 正在渲染动态图表...</span>
-                                      </div>
-                                    );
-                                  }
-                                }
-                                return (
-                                  <code className={className} {...props}>
-                                    {children}
-                                  </code>
-                                );
-                              },
-                            }}
+                            components={markdownComponents}
                           >
                             {textContent}
                           </ReactMarkdown>
