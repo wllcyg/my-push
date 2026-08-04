@@ -4,11 +4,17 @@ import { AgentService } from './agent.service';
 import { LlmService } from '../llm/llm.service';
 import { EmbeddingService } from '../document/services/embedding.service';
 import { AIMessage } from '@langchain/core/messages';
-
+import { ConfigService } from '@nestjs/config';
+import { AGENT_TOOLS } from './agent.module';
+import { createKnowledgeRetrieverTool } from './tools/knowledge-retriever.tool';
 import { LangfuseService } from '../langfuse/langfuse.service';
+
+import { SkillRegistryService } from './services/skill-registry.service';
 import { RedisMessageStoreService } from './services/redis-message-store.service';
+
 import { ChatHistoryService } from './services/chat-history.service';
 import { SemanticCacheService } from './services/semantic-cache.service';
+
 
 describe('AgentService', () => {
   let service: AgentService;
@@ -83,8 +89,22 @@ describe('AgentService', () => {
         { provide: RedisMessageStoreService, useValue: mockRedisStoreService },
         { provide: ChatHistoryService, useValue: mockChatHistoryService },
         { provide: SemanticCacheService, useValue: mockSemanticCacheService },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('test-key') } },
+        {
+          provide: SkillRegistryService,
+          useValue: {
+            getSkillManifestPrompt: jest.fn().mockReturnValue(''),
+            getMatchedSkillBodies: jest.fn().mockReturnValue(''),
+          },
+        },
+        {
+          provide: AGENT_TOOLS,
+          useValue: [createKnowledgeRetrieverTool(mockEmbeddingService as any, mockDataSource as any)],
+        },
       ],
+
     }).compile();
+
 
     service = module.get<AgentService>(AgentService);
     service.onModuleInit();

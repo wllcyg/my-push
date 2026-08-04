@@ -1,21 +1,28 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Inject, Logger, OnModuleInit } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage, AIMessage, SystemMessage, BaseMessage } from '@langchain/core/messages';
 import { StateGraph, Annotation, START, END, CompiledStateGraph } from '@langchain/langgraph';
 import { ToolNode, toolsCondition } from '@langchain/langgraph/prebuilt';
+import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { RunnableConfig } from '@langchain/core/runnables';
-import { createKnowledgeRetrieverTool } from './tools/knowledge-retriever.tool';
-import { EmbeddingService } from '../document/services/embedding.service';
+import { AGENT_TOOLS } from './agent.constants';
+
+import * as fs from 'fs';
+import * as path from 'path';
+
 import { LlmService } from '../llm/llm.service';
+
 import { LangfuseService } from '../langfuse/langfuse.service';
 
 import { RedisMessageStoreService } from './services/redis-message-store.service';
 import { ChatHistoryService } from './services/chat-history.service';
 import { SemanticCacheService } from './services/semantic-cache.service';
+import { SkillRegistryService } from './services/skill-registry.service';
 
 /** 获取格式化当前系统时间 */
+
 function getCurrentTimeFormatted(): string {
   const now = new Date();
   return now.toLocaleString('zh-CN', {
@@ -56,6 +63,7 @@ export const AgentState = Annotation.Root({
 export class AgentService implements OnModuleInit {
   private readonly logger = new Logger(AgentService.name);
   private mainLlm: ChatOpenAI;
+  private fastLlm: ChatOpenAI;
   private classifierLlm: ChatOpenAI;
 
   /** 模块初始化后编译一次，全生命周期复用 */
@@ -63,16 +71,25 @@ export class AgentService implements OnModuleInit {
 
   constructor(
     private readonly llmService: LlmService,
-    private readonly embeddingService: EmbeddingService,
-    private readonly dataSource: DataSource,
     private readonly langfuseService: LangfuseService,
     private readonly redisStoreService: RedisMessageStoreService,
     private readonly chatHistoryService: ChatHistoryService,
     private readonly semanticCacheService: SemanticCacheService,
+    private readonly skillRegistryService: SkillRegistryService,
+
+    // 👈 从 AgentModule 中由容器自动收集注入工具数组，实现完全解耦
+    @Inject(AGENT_TOOLS) private readonly tools: DynamicStructuredTool[],
   ) {
     // 主推理模型（默认采用配置好的主模型，如 qwen3.6-plus / qwen-max）
     this.mainLlm = this.llmService.createChatModel({
       temperature: 0.2,
+      streaming: true,
+    });
+
+    // 极速推理模型（专门用于画图与快速直答场景，吞吐速度极大提升 3~5 倍）
+    this.fastLlm = this.llmService.createChatModel({
+      modelName: 'qwen-turbo',
+      temperature: 0.1,
       streaming: true,
     });
 
@@ -84,19 +101,19 @@ export class AgentService implements OnModuleInit {
     });
   }
 
+
   /**
    * NestJS 生命周期钩子：模块初始化完成后执行一次 workflow 编译
    * 后续所有请求复用同一个 compiledApp 实例，避免重复构建 StateGraph
    */
   onModuleInit() {
-    this.logger.log('⚙️  [LangGraph] 初始化并编译 Agent StateGraph (含轻量意图分类路由)...');
-
-    // 工具与 LLM 绑定（embeddingService / dataSource 均为单例，可安全复用）
-    const retrieverTool = createKnowledgeRetrieverTool(
-      this.embeddingService,
-      this.dataSource,
+    this.logger.log(
+      `⚙️  [LangGraph] 初始化并编译 Agent StateGraph (解耦加载 ${this.tools.length} 个 Module 工具)...`,
     );
-    const llmWithTools = this.mainLlm.bindTools([retrieverTool]);
+
+    // 自动将依赖注入的工具数组绑定给 LLM 与 StateGraph
+    const llmWithTools = this.mainLlm.bindTools(this.tools);
+    const fastLlmWithTools = this.fastLlm.bindTools(this.tools);
 
     // 1. 意图分类节点（传入 config 确保 Langfuse callbacks 成功深入透传）
     const intentNode = async (
@@ -142,11 +159,21 @@ export class AgentService implements OnModuleInit {
       state: typeof AgentState.State,
       config?: RunnableConfig,
     ) => {
-      const response = await llmWithTools.invoke(state.messages, config);
-      if (response.tool_calls && response.tool_calls.length > 0) {
+      // 检查最后一条消息是否包含画图意图
+      const lastMsg = [...state.messages].reverse().find((m) => m._getType() === 'human');
+      const isDrawingHit = lastMsg && /[画图表对比趋势占比折线饼图柱状漏斗雷达]/.test(String(lastMsg.content));
+
+      // 绘图场景激活高吞吐极速模型，生成速度提升 3~5 倍
+      const targetLlm = isDrawingHit ? fastLlmWithTools : llmWithTools;
+      if (isDrawingHit) {
+        this.logger.log(`⚡ [AgentService] 触发绘图需求，切换为极速模型 (qwen-turbo) 极速推理...`);
+      }
+
+      const response = await targetLlm.invoke(state.messages, config);
+      if (response && response.tool_calls && response.tool_calls.length > 0) {
         for (const tc of response.tool_calls) {
           this.logger.log(
-            `🤖 [LangGraph ToolCall] 触发工具: ${tc.name}, 参数: ${JSON.stringify(tc.args)}`,
+            `🤖 [LangGraph] Agent 决策触发 Tool: ${tc.name}, 参数: ${JSON.stringify(tc.args)}`,
           );
         }
       }
@@ -172,7 +199,9 @@ export class AgentService implements OnModuleInit {
     };
 
     // Tools 自动执行节点
-    const toolsNode = new ToolNode([retrieverTool]);
+    const toolsNode = new ToolNode(this.tools);
+
+
 
     // 构建带路由分支的 LangGraph 状态图
     const workflow = new StateGraph(AgentState)
@@ -269,15 +298,27 @@ export class AgentService implements OnModuleInit {
       this.logger.warn('⚠️ [Langfuse Trace] 未能初始化 Trace Bundle，跳过 Tracing 上报');
     }
 
-    // 构建 SystemMessage 头部（100% 保持静态，维护大模型后端 KV Cache 极速命中）
+    // 1. 获取 YAML 描述解析出的轻量技能预知清单 (让大模型预先知道有哪些 Skill)
+    const skillManifest = this.skillRegistryService.getSkillManifestPrompt();
+    // 2. 根据用户当前提问按需精准匹配出需要激活的 Skill 详细 Markdown 规则
+    const matchedSkills = this.skillRegistryService.getMatchedSkillBodies(userQuery);
+
+    // 构建 SystemMessage 头部（保持高频命中的静态前缀）
     const systemPromptMessage = new SystemMessage(
-      '你是一个专业、严谨的企业知识库 AI 智能助手。你的目标是帮助用户回答技术、业务、文档及员工相关问题。\n' +
+      '你是一个专业、严谨的企业 AI 智能助手。你的目标是帮助用户回答技术、业务、文档、员工规范及实时资讯相关问题。\n' +
         `当前系统时间：${getCurrentTimeFormatted()}\n` +
         '规则：\n' +
-        '1. 当用户的问题涉及具体技术、文档规范、简历或业务内容时，你必须且优先调用 `knowledge_retriever` 工具在知识库中进行向量检索。\n' +
-        '2. 如果检索到了相关知识切片，请基于切片内容准确作答，并在回答中以 `[1]`、`[2]` 角标标注出处。\n' +
-        '3. 若未找到相关信息，请诚实告知用户，不要胡乱编造。',
+        '1. 当用户的问题涉及企业具体技术、文档规范、简历或业务内容时，你必须且优先调用 `knowledge_retriever` 工具在知识库中进行向量检索。\n' +
+        '2. 如果本地知识库未检索到相关内容，或者用户询问最新外部新闻、实时技术文档、开源库最新动态或实时信息时，请调用 `web_search` 工具进行互联网搜索。\n' +
+        '3. 基于检索到的切片或网页结果准确作答，并在回答中以 `[1]`、`[2]` 角标标注出处。\n' +
+        '4. 若本地库和联网搜索均未找到相关信息，请诚实告知用户，不要胡乱编造。' +
+        (skillManifest ? `\n${skillManifest}` : '') +
+        (matchedSkills ? `\n\n${matchedSkills}` : ''),
     );
+
+
+
+
 
     const formattedMessages: BaseMessage[] = [systemPromptMessage];
 

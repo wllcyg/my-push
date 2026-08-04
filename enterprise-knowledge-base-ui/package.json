@@ -16,6 +16,8 @@
     "ai": "^7.0.47",
     "antd": "^5.24.2",
     "axios": "^1.7.9",
+    "echarts": "^6.1.0",
+    "echarts-for-react": "^3.0.6",
     "lucide-react": "^0.475.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

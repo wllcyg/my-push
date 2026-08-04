@@ -9,9 +9,11 @@ import {
 } from '@ant-design/icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import ReactECharts from 'echarts-for-react';
 import { useChat } from '@ai-sdk/react';
 import { TextStreamChatTransport } from 'ai';
 import { API_BASE_URL } from '../api/client';
+
 
 interface AIChatDrawerProps {
   open: boolean;
@@ -190,14 +192,51 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ open, onClose }) => 
                           : 'bg-white text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_4px_12px_rgba(15,23,42,0.04)]'
                       }`}
                     >
-                      {/* 支持 Markdown 渲染 */}
+                      {/* 支持 Markdown 渲染与 ECharts 动态图表拦截 */}
                       {textContent ? (
                         <div
                           className={`prose-chat max-w-none break-words ${
                             m.role === 'user' ? 'prose-chat-invert' : ''
                           }`}
                         >
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              code({ node, inline, className, children, ...props }: any) {
+                                const match = /language-json:echarts/.exec(className || '');
+                                if (!inline && match) {
+                                  try {
+                                    const optionStr = String(children).replace(/\n$/, '');
+                                    const option = JSON.parse(optionStr);
+                                    // 强制将图表背景设为透明，杜绝出现黑色大方块
+                                    option.backgroundColor = 'transparent';
+                                    return (
+                                      <div className="my-4 p-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden min-w-[320px]">
+                                        <ReactECharts
+                                          option={option}
+                                          style={{ height: '340px', width: '100%' }}
+                                          opts={{ renderer: 'canvas' }}
+                                        />
+                                      </div>
+                                    );
+
+                                  } catch (e) {
+                                    return (
+                                      <div className="my-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-400 flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
+                                        <span>AI 正在渲染动态图表...</span>
+                                      </div>
+                                    );
+                                  }
+                                }
+                                return (
+                                  <code className={className} {...props}>
+                                    {children}
+                                  </code>
+                                );
+                              },
+                            }}
+                          >
                             {textContent}
                           </ReactMarkdown>
                           {/* 流式打字生成中的打字机光标动画 */}
@@ -205,6 +244,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({ open, onClose }) => 
                             <span className="inline-block w-2 h-4 ml-1 bg-emerald-500 animate-pulse align-middle rounded-sm" />
                           )}
                         </div>
+
                       ) : (
                         <div className="flex items-center gap-2 py-0.5 text-xs text-slate-400">
                           <span>AI 正在思考并检索知识库...</span>
