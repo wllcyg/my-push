@@ -9,6 +9,7 @@ import { EmbeddingService } from '../document/services/embedding.service';
 import { RedisMessageStoreService } from './services/redis-message-store.service';
 import { ChatHistoryService } from './services/chat-history.service';
 import { SemanticCacheService } from './services/semantic-cache.service';
+import { RerankService } from './services/rerank.service';
 import { ChatSessionEntity } from './entities/chat-session.entity';
 import { ChatMessageEntity } from './entities/chat-message.entity';
 import { createKnowledgeRetrieverTool } from './tools/knowledge-retriever.tool';
@@ -27,11 +28,12 @@ export const AgentToolsProvider: Provider = {
     embeddingService: EmbeddingService,
     dataSource: DataSource,
     configService: ConfigService,
+    rerankService: RerankService,
   ) => [
-    createKnowledgeRetrieverTool(embeddingService, dataSource),
+    createKnowledgeRetrieverTool(embeddingService, dataSource, rerankService),
     createBochaWebSearchTool(configService),
   ],
-  inject: [EmbeddingService, DataSource, ConfigService],
+  inject: [EmbeddingService, DataSource, ConfigService, RerankService],
 };
 
 @Module({
@@ -47,6 +49,7 @@ export const AgentToolsProvider: Provider = {
     ChatHistoryService,
     SemanticCacheService,
     SkillRegistryService,
+    RerankService,
   ],
   exports: [
     AgentService,
@@ -55,7 +58,9 @@ export const AgentToolsProvider: Provider = {
     ChatHistoryService,
     SemanticCacheService,
     SkillRegistryService,
+    RerankService,
   ],
 })
 export class AgentModule {}
+
 

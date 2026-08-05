@@ -7,7 +7,7 @@ import { ToolNode, toolsCondition } from '@langchain/langgraph/prebuilt';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { RunnableConfig } from '@langchain/core/runnables';
-import { AGENT_TOOLS } from './agent.constants';
+import { AGENT_TOOLS, AGENT_MODEL_CONFIG } from './agent.constants';
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -80,22 +80,23 @@ export class AgentService implements OnModuleInit {
     // 👈 从 AgentModule 中由容器自动收集注入工具数组，实现完全解耦
     @Inject(AGENT_TOOLS) private readonly tools: DynamicStructuredTool[],
   ) {
-    // 主推理模型（默认采用配置好的主模型，如 qwen3.6-plus / qwen-max）
+    // 主推理模型（默认采用配置好的主模型）
     this.mainLlm = this.llmService.createChatModel({
+      modelName: AGENT_MODEL_CONFIG.MAIN_MODEL_NAME,
       temperature: 0.2,
       streaming: true,
     });
 
     // 极速推理模型（专门用于画图与快速直答场景，吞吐速度极大提升 3~5 倍）
     this.fastLlm = this.llmService.createChatModel({
-      modelName: 'qwen-turbo',
+      modelName: AGENT_MODEL_CONFIG.FAST_MODEL_NAME,
       temperature: 0.1,
       streaming: true,
     });
 
-    // 轻量路由模型（采用 qwen-turbo，低延迟极速分类）
+    // 轻量路由模型（采用低延迟极速分类）
     this.classifierLlm = this.llmService.createChatModel({
-      modelName: 'qwen-turbo',
+      modelName: AGENT_MODEL_CONFIG.CLASSIFIER_MODEL_NAME,
       temperature: 0,
       streaming: false,
     });
