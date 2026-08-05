@@ -1,63 +1,20 @@
 import { Injectable, Inject, Logger, OnModuleInit } from '@nestjs/common';
-import { DataSource } from 'typeorm';
 import { ChatOpenAI } from '@langchain/openai';
-import { HumanMessage, AIMessage, SystemMessage, BaseMessage } from '@langchain/core/messages';
-import { StateGraph, Annotation, START, END, CompiledStateGraph } from '@langchain/langgraph';
-import { ToolNode, toolsCondition } from '@langchain/langgraph/prebuilt';
+import { BaseMessage } from '@langchain/core/messages';
+import { CompiledStateGraph } from '@langchain/langgraph';
 import { DynamicStructuredTool } from '@langchain/core/tools';
-import { z } from 'zod';
-import { RunnableConfig } from '@langchain/core/runnables';
 import { AGENT_TOOLS, AGENT_MODEL_CONFIG } from './agent.constants';
-
-import * as fs from 'fs';
-import * as path from 'path';
-
 import { LlmService } from '../llm/llm.service';
-
 import { LangfuseService } from '../langfuse/langfuse.service';
-
 import { RedisMessageStoreService } from './services/redis-message-store.service';
 import { ChatHistoryService } from './services/chat-history.service';
 import { SemanticCacheService } from './services/semantic-cache.service';
 import { SkillRegistryService } from './services/skill-registry.service';
-
-/** 获取格式化当前系统时间 */
-
-function getCurrentTimeFormatted(): string {
-  const now = new Date();
-  return now.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    weekday: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'Asia/Shanghai',
-  });
-}
-
-/** 定义意图分类 Schema */
-const IntentSchema = z.object({
-  intent: z
-    .enum(['RAG', 'DIRECT'])
-    .describe(
-      'RAG: 当用户询问具体技术细节、企业业务流程、文档规范、简历或产品内容时选择;\n' +
-      'DIRECT: 当用户仅为日常打招呼(你好/Hi)、表示感谢、询问助手是谁、询问当前时间/日期、要求写通用无关代码或闲聊时选择。',
-    ),
-  reason: z.string().optional().describe('分类原因简述'),
-});
-
-/** 定义 LangGraph Agent 对话状态结构 */
-export const AgentState = Annotation.Root({
-  messages: Annotation<BaseMessage[]>({
-    reducer: (x, y) => x.concat(y),
-    default: () => [],
-  }),
-  intent: Annotation<'RAG' | 'DIRECT'>({
-    reducer: (x, y) => y ?? x,
-    default: () => 'RAG',
-  }),
-});
+import { SemanticFewShotService } from './services/semantic-few-shot.service';
+import { buildCompiledAgentWorkflow } from './agent-workflow.builder';
+import { buildFormattedMessages } from './agent-chat-context.builder';
+import { createAgentResponseStream } from './agent-stream.generator';
+import { SESSION_DEPENDENT_QUERY_REGEX } from './agent.utils';
 
 @Injectable()
 export class AgentService implements OnModuleInit {
@@ -76,32 +33,27 @@ export class AgentService implements OnModuleInit {
     private readonly chatHistoryService: ChatHistoryService,
     private readonly semanticCacheService: SemanticCacheService,
     private readonly skillRegistryService: SkillRegistryService,
-
-    // 👈 从 AgentModule 中由容器自动收集注入工具数组，实现完全解耦
+    private readonly semanticFewShotService: SemanticFewShotService,
     @Inject(AGENT_TOOLS) private readonly tools: DynamicStructuredTool[],
   ) {
-    // 主推理模型（默认采用配置好的主模型）
     this.mainLlm = this.llmService.createChatModel({
       modelName: AGENT_MODEL_CONFIG.MAIN_MODEL_NAME,
       temperature: 0.2,
       streaming: true,
     });
 
-    // 极速推理模型（专门用于画图与快速直答场景，吞吐速度极大提升 3~5 倍）
     this.fastLlm = this.llmService.createChatModel({
       modelName: AGENT_MODEL_CONFIG.FAST_MODEL_NAME,
       temperature: 0.1,
       streaming: true,
     });
 
-    // 轻量路由模型（采用低延迟极速分类）
     this.classifierLlm = this.llmService.createChatModel({
       modelName: AGENT_MODEL_CONFIG.CLASSIFIER_MODEL_NAME,
       temperature: 0,
       streaming: false,
     });
   }
-
 
   /**
    * NestJS 生命周期钩子：模块初始化完成后执行一次 workflow 编译
@@ -112,130 +64,17 @@ export class AgentService implements OnModuleInit {
       `⚙️  [LangGraph] 初始化并编译 Agent StateGraph (解耦加载 ${this.tools.length} 个 Module 工具)...`,
     );
 
-    // 自动将依赖注入的工具数组绑定给 LLM 与 StateGraph
-    const llmWithTools = this.mainLlm.bindTools(this.tools);
-    const fastLlmWithTools = this.fastLlm.bindTools(this.tools);
+    this.compiledApp = buildCompiledAgentWorkflow({
+      mainLlm: this.mainLlm,
+      fastLlm: this.fastLlm,
+      classifierLlm: this.classifierLlm,
+      tools: this.tools,
+      logger: this.logger,
+    });
 
-    // 1. 意图分类节点（传入 config 确保 Langfuse callbacks 成功深入透传）
-    const intentNode = async (
-      state: typeof AgentState.State,
-      config?: RunnableConfig,
-    ) => {
-      // 获取用户发送的最后一条消息
-      const lastHumanMsg = [...state.messages].reverse().find((m) => m._getType() === 'human');
-      const userQuery = lastHumanMsg ? String(lastHumanMsg.content) : '';
-
-      // 预处理 query：去除首尾空格及末尾常见的语气词和标点
-      const normalizedQuery = userQuery.trim().replace(/[？\?！!。，,呢啊呀吗吧]+$/g, '');
-
-      // 强硬规则：只要包含画图/图表/数据可视化关键词，绝对走 RAG/技能分支，严禁走 DIRECT
-      if (/[画图表对比趋势占比折线饼图柱状漏斗雷达]/.test(normalizedQuery)) {
-        this.logger.log(`🎯 [IntentRouter] 触发绘图硬规则 => 强制走向 RAG/技能分支`);
-        return { intent: 'RAG' as const };
-      }
-
-      // 极速硬规则正则过滤：对于超短常见的打招呼/时间/感谢词，0 延迟直接判定为 DIRECT
-      if (/^(你好|您好|hi|hello|hey|谢谢|感谢|你是谁|自我介绍|再见|bye|今天几号|今天是几号|分析一下今天是几号|几月几号|几点|当前时间|今天星期几)$/i.test(normalizedQuery)) {
-        this.logger.log(`🎯 [IntentRouter] 触发硬规则匹配 => DIRECT (免去 LLM 分类)`);
-        return { intent: 'DIRECT' as const };
-      }
-
-      try {
-        const structuredClassifier = this.classifierLlm.withStructuredOutput(IntentSchema, {
-          name: 'route_intent',
-        });
-
-        const result = await structuredClassifier.invoke(
-          [
-            new SystemMessage('你是一个专业的企业 AI 助手意图路由分类器。分析用户问题，判定是否需要检索知识库或使用专业技能。若涉及画图、图表或数据展示，必须选择 RAG。'),
-            new HumanMessage(userQuery || '你好'),
-          ],
-          config, // 👈 关键点：将 RunnableConfig 透传给 LLM
-        );
-
-        this.logger.log(`🎯 [IntentRouter] 识别完成 => 意图: ${result.intent}, 原因: ${result.reason || '无'}`);
-        return { intent: result.intent };
-      } catch (error) {
-        this.logger.warn(`⚠️ [IntentRouter] 意图分类异常，降级默认走 RAG 分支: ${(error as Error).message}`);
-        return { intent: 'RAG' as const };
-      }
-    };
-
-    // 2. RAG 知识库检索思考节点 (透传 config 给底层 llm.invoke)
-    const callRagNode = async (
-      state: typeof AgentState.State,
-      config?: RunnableConfig,
-    ) => {
-      // 检查最后一条消息是否包含画图意图
-      const lastMsg = [...state.messages].reverse().find((m) => m._getType() === 'human');
-      const isDrawingHit = lastMsg && /[画图表对比趋势占比折线饼图柱状漏斗雷达]/.test(String(lastMsg.content));
-
-      // 绘图场景激活高吞吐极速模型，生成速度提升 3~5 倍
-      const targetLlm = isDrawingHit ? fastLlmWithTools : llmWithTools;
-      if (isDrawingHit) {
-        this.logger.log(`⚡ [AgentService] 触发绘图需求，切换为极速模型 (qwen-turbo) 极速推理...`);
-      }
-
-      const response = await targetLlm.invoke(state.messages, config);
-      if (response && response.tool_calls && response.tool_calls.length > 0) {
-        for (const tc of response.tool_calls) {
-          this.logger.log(
-            `🤖 [LangGraph] Agent 决策触发 Tool: ${tc.name}, 参数: ${JSON.stringify(tc.args)}`,
-          );
-        }
-      }
-      return { messages: [response] };
-    };
-
-    // 3. 纯 Chat 直连回答节点 (保留初始 SystemMessage，确保包含完整的 Skill 强约束)
-    const callDirectNode = async (
-      state: typeof AgentState.State,
-      config?: RunnableConfig,
-    ) => {
-      const lastMsg = [...state.messages].reverse().find((m) => m._getType() === 'human');
-      const isDrawingHit = lastMsg && /[画图表对比趋势占比折线饼图柱状漏斗雷达]/.test(String(lastMsg.content));
-      const targetLlm = isDrawingHit ? this.fastLlm : this.mainLlm;
-
-      // 保留完整的 state.messages (其中头部包含了完整的 SystemMessage 以及激活的 Skill 强约束)
-      const response = await targetLlm.invoke(state.messages, config);
-      return { messages: [response] };
-    };
-
-    // Tools 自动执行节点
-    const toolsNode = new ToolNode(this.tools);
-
-    // 构建带路由分支的 LangGraph 状态图
-    const workflow = new StateGraph(AgentState)
-      .addNode('intent_router', intentNode)
-      .addNode('rag_agent', callRagNode)
-      .addNode('direct_agent', callDirectNode)
-      .addNode('tools', toolsNode)
-
-      // 入口 -> 意图识别节点
-      .addEdge(START, 'intent_router')
-
-      // 根据意图选择路由分支
-      .addConditionalEdges(
-        'intent_router',
-        (state) => state.intent,
-        {
-          RAG: 'rag_agent',
-          DIRECT: 'direct_agent',
-        },
-      )
-
-      // RAG 分支后处理：检查是否有工具调用
-      .addConditionalEdges('rag_agent', toolsCondition, {
-        tools: 'tools',
-        __end__: END,
-      })
-      .addEdge('tools', 'rag_agent')
-
-      // Direct 分支直接结束
-      .addEdge('direct_agent', END);
-
-    this.compiledApp = workflow.compile();
-    this.logger.log('✅ [LangGraph] 意图路由 Agent StateGraph 编译完成，已就绪');
+    this.logger.log(
+      '✅ [LangGraph] 意图路由 Agent StateGraph 编译完成，已就绪',
+    );
   }
 
   /**
@@ -246,37 +85,43 @@ export class AgentService implements OnModuleInit {
     rawMessages: Array<{ role: string; content: string }>,
     inputSessionId?: string,
   ): Promise<{ textStream: AsyncGenerator<string>; sessionId: string }> {
-    // 后端主导会话 ID 逻辑：未传则由后端自动生成标准 session_xxx，传了则继承
     const activeSessionId =
       inputSessionId && inputSessionId.trim() !== ''
         ? inputSessionId.trim()
         : `session_${crypto.randomUUID()}`;
 
-    // 获取最后一条用户输入的自然语言问题
-    const lastUserMsg = [...rawMessages].reverse().find((m) => m?.role === 'user');
+    const lastUserMsg = [...rawMessages]
+      .reverse()
+      .find((m) => m?.role === 'user');
     const userQuery = lastUserMsg?.content || '你好';
 
-    this.logger.log(`🚀 [LangGraph] 收到问答请求 (Session: ${activeSessionId})`);
+    this.logger.log(
+      `🚀 [LangGraph] 收到问答请求 (Session: ${activeSessionId})`,
+    );
 
-    // 1. 尝试从 Redis 恢复短期记忆历史消息
-    const redisHistory = await this.redisStoreService.loadMessages(activeSessionId);
+    const redisHistory =
+      await this.redisStoreService.loadMessages(activeSessionId);
 
-    // 判断当前提问是否属于强依赖上下文/指代的对话（如“我刚才说了什么”、“按第2点修改”等）
     const isSessionDependentQuery =
       redisHistory.length > 0 ||
       rawMessages.length > 1 ||
-      /^(我|你|我们|刚才|上一句|上文|第.*点|修改|删|改|叫什么|我是谁)/i.test(userQuery.trim());
+      SESSION_DEPENDENT_QUERY_REGEX.test(userQuery.trim());
 
-    // 仅针对单轮独立且无强上下文依赖的高频提问尝试命中语义缓存
     if (!isSessionDependentQuery) {
-      const semanticCachedAnswer = await this.semanticCacheService.getMatchedCache(userQuery);
+      const semanticCachedAnswer =
+        await this.semanticCacheService.getMatchedCache(userQuery);
       if (semanticCachedAnswer) {
         const fastStream = async function* () {
+          await Promise.resolve();
           yield semanticCachedAnswer;
         };
-        // 异步记录问答明细到 PostgreSQL 数据库
-        this.chatHistoryService.appendMessage(activeSessionId, 'user', userQuery).catch(() => { });
-        this.chatHistoryService.appendMessage(activeSessionId, 'assistant', semanticCachedAnswer).catch(() => { });
+
+        this.chatHistoryService
+          .appendMessage(activeSessionId, 'user', userQuery)
+          .catch(() => {});
+        this.chatHistoryService
+          .appendMessage(activeSessionId, 'assistant', semanticCachedAnswer)
+          .catch(() => {});
 
         return {
           textStream: fastStream(),
@@ -285,7 +130,6 @@ export class AgentService implements OnModuleInit {
       }
     }
 
-    // 创建显式 Root Trace 节点
     const traceBundle = this.langfuseService.createTraceBundle({
       name: 'agent-chat',
       sessionId: activeSessionId,
@@ -293,141 +137,48 @@ export class AgentService implements OnModuleInit {
       input: { query: userQuery, redisHistoryCount: redisHistory.length },
     });
 
-    const langfuseHandler = traceBundle?.handler ?? null;
-
     if (!traceBundle) {
-      this.logger.warn('⚠️ [Langfuse Trace] 未能初始化 Trace Bundle，跳过 Tracing 上报');
+      this.logger.warn(
+        '⚠️ [Langfuse Trace] 未能初始化 Trace Bundle，跳过 Tracing 上报',
+      );
     }
 
-    // 1. 获取 YAML 描述解析出的轻量技能预知清单 (让大模型预先知道有哪些 Skill)
     const skillManifest = this.skillRegistryService.getSkillManifestPrompt();
-    // 2. 根据用户当前提问按需精准匹配出需要激活的 Skill 详细 Markdown 规则
-    const matchedSkills = this.skillRegistryService.getMatchedSkillBodies(userQuery);
+    const matchedSkills =
+      this.skillRegistryService.getMatchedSkillBodies(userQuery);
 
-    // 如果匹配到了特定 Skill，添加最高优先级的覆盖指令 (Override Directive)
-    const skillOverrideDirective = matchedSkills
-      ? '\n\n🚨🚨🚨【最高优先级强指令 - 覆盖默认行为】🚨🚨🚨\n' +
-      '当前用户提问已精确触发了系统专有技能 (Skill)。你必须 100% 无条件且严格遵守下方 Skill 文件的格式与交互规范！\n' +
-      '【特别警告】：若属于图表/画图/数据可视化需求，绝对禁止提供 Python/matplotlib 代码，绝对禁止要求用户本地运行脚本，必须直接且仅输出 ```json:echarts 动态图表代码块以供前端组件直接渲染！'
-      : '';
+    // 动态搜索匹配的 Semantic Few-Shot 少样本示范
+    const fewShotMessages =
+      this.semanticFewShotService.buildFewShotMessages(userQuery);
 
-    // 构建 SystemMessage 头部（保持高频命中的静态前缀）
-    const systemPromptMessage = new SystemMessage(
-      '你是一个专业、严谨的企业 AI 智能助手。你的目标是帮助用户回答技术、业务、文档、员工规范及实时资讯相关问题。\n' +
-      `当前系统时间：${getCurrentTimeFormatted()}\n` +
-      '规则：\n' +
-      '1. 当用户的问题涉及企业具体技术、文档规范、简历或业务内容时，你必须且优先调用 `knowledge_retriever` 工具在知识库中进行向量检索。\n' +
-      '2. 如果本地知识库未检索到相关内容，或者用户询问最新外部新闻、实时技术文档、开源库最新动态或实时信息时，请调用 `web_search` 工具进行互联网搜索。\n' +
-      '3. 基于检索到的切片或网页结果准确作答，并在回答中以 `[1]`、`[2]` 角标标注出处。\n' +
-      '4. 若本地库和联网搜索均未找到相关信息，请诚实告知用户，不要胡乱编造。' +
-      (skillManifest ? `\n${skillManifest}` : '') +
-      skillOverrideDirective +
-      (matchedSkills ? `\n\n${matchedSkills}` : ''),
-    );
+    const formattedMessages: BaseMessage[] = buildFormattedMessages({
+      userQuery,
+      rawMessages,
+      redisHistory,
+      skillManifest,
+      matchedSkills,
+      fewShotMessages,
+    });
 
-
-
-
-
-    const formattedMessages: BaseMessage[] = [systemPromptMessage];
-
-    // 如果前端传了包含历史的完整数组，则优先使用前端格式化的历史
-    if (rawMessages.length > 1) {
-      for (const msg of rawMessages) {
-        if (!msg) continue;
-        const textContent = typeof msg.content === 'string' ? msg.content : String(msg.content || '');
-        if (!textContent) continue;
-        if (msg.role === 'user') {
-          formattedMessages.push(new HumanMessage(textContent));
-        } else if (msg.role === 'assistant') {
-          formattedMessages.push(new AIMessage(textContent));
-        }
-      }
-    } else if (redisHistory.length > 0) {
-      // 隐式读取 Redis 短期记忆模式：直接拼接 Redis 中的历史消息 + 当前用户新 Query
-      this.logger.log(`🧠 [AgentMemory] 成功从 Redis 加载 ${redisHistory.length} 条历史对话`);
-      formattedMessages.push(...redisHistory);
-      formattedMessages.push(new HumanMessage(userQuery));
-    } else {
-      // 首次会话：仅放入当前用户 Query
-      formattedMessages.push(new HumanMessage(userQuery));
+    if (rawMessages.length <= 1 && redisHistory.length > 0) {
+      this.logger.log(
+        `🧠 [AgentMemory] 成功从 Redis 加载 ${redisHistory.length} 条历史对话`,
+      );
     }
-
-    const redisService = this.redisStoreService;
-    const historyService = this.chatHistoryService;
-    const cacheService = this.semanticCacheService;
-
-    // 3. 内部异步生成器
-    const generateStream = async function* (compiledApp: any, logger: any) {
-      let fullAnswer = '';
-      try {
-        const stream = await compiledApp.stream(
-          { messages: formattedMessages },
-          {
-            streamMode: 'messages',
-            recursionLimit: 10,
-            callbacks: langfuseHandler ? [langfuseHandler] : [],
-          },
-        );
-
-        for await (const [message, meta] of stream) {
-          const nodeName = meta?.langgraph_node;
-          if (
-            (nodeName === 'rag_agent' || nodeName === 'direct_agent') &&
-            message &&
-            typeof message.content === 'string'
-          ) {
-            if (message.content) {
-              fullAnswer += message.content;
-              yield message.content;
-            }
-          }
-        }
-      } catch (error) {
-        logger.error(`❌ [LangGraph] 流式推理失败: ${(error as Error).message}`, (error as Error).stack);
-        yield '抱歉，智能助手遇到了一些问题，请稍后重试。';
-      } finally {
-        if (traceBundle) {
-          traceBundle.trace.update({
-            output: { answer: fullAnswer || '无输出' },
-          });
-          await traceBundle.flush();
-        }
-
-        // 问答结束写回 Redis 短期记忆 (过滤 SystemMessage)，超过 8 条自动触发 LLM 摘要提炼并回调更新 Supabase 数据库
-        const chatOnlyMessages = formattedMessages
-          .filter((m) => m._getType() !== 'system')
-          .concat(new AIMessage(fullAnswer));
-
-        await redisService.saveMessages(
-          activeSessionId,
-          chatOnlyMessages,
-          8,
-          (summaryText) => {
-            // 当触发 LLM 摘要时，异步更新 Supabase PostgreSQL 中的会话总结字段
-            historyService.updateSessionSummary(activeSessionId, summaryText).catch(() => { });
-          },
-        );
-
-        // 写回语义缓存（仅针对单轮通用独立提问，7 天 TTL 防爆）
-        if (fullAnswer && !isSessionDependentQuery) {
-          cacheService.setMatchedCache(userQuery, fullAnswer).catch(() => { });
-        }
-
-        // 异步持久化问答明细到 Supabase PostgreSQL (长期记忆)
-        historyService.appendMessage(activeSessionId, 'user', userQuery).catch((err) => {
-          logger.error(`❌ [ChatHistory] 写入用户消息到 DB 异常: ${err.message}`);
-        });
-        if (fullAnswer) {
-          historyService.appendMessage(activeSessionId, 'assistant', fullAnswer).catch((err) => {
-            logger.error(`❌ [ChatHistory] 写入 AI 消息到 DB 异常: ${err.message}`);
-          });
-        }
-      }
-    };
 
     return {
-      textStream: generateStream(this.compiledApp, this.logger),
+      textStream: createAgentResponseStream({
+        compiledApp: this.compiledApp,
+        logger: this.logger,
+        formattedMessages,
+        traceBundle,
+        activeSessionId,
+        userQuery,
+        isSessionDependentQuery,
+        redisStoreService: this.redisStoreService,
+        chatHistoryService: this.chatHistoryService,
+        semanticCacheService: this.semanticCacheService,
+      }),
       sessionId: activeSessionId,
     };
   }

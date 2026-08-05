@@ -16,6 +16,7 @@ import { createKnowledgeRetrieverTool } from './tools/knowledge-retriever.tool';
 import { createBochaWebSearchTool } from './tools/bocha-web-search.tool';
 
 import { SkillRegistryService } from './services/skill-registry.service';
+import { SemanticFewShotService } from './services/semantic-few-shot.service';
 import { AGENT_TOOLS } from './agent.constants';
 
 export { AGENT_TOOLS };
@@ -49,6 +50,7 @@ export const AgentToolsProvider: Provider = {
     ChatHistoryService,
     SemanticCacheService,
     SkillRegistryService,
+    SemanticFewShotService,
     RerankService,
   ],
   exports: [
@@ -58,9 +60,8 @@ export const AgentToolsProvider: Provider = {
     ChatHistoryService,
     SemanticCacheService,
     SkillRegistryService,
+    SemanticFewShotService,
     RerankService,
   ],
 })
 export class AgentModule {}
-
-

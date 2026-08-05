@@ -10,6 +10,7 @@ import { createKnowledgeRetrieverTool } from './tools/knowledge-retriever.tool';
 import { LangfuseService } from '../langfuse/langfuse.service';
 
 import { SkillRegistryService } from './services/skill-registry.service';
+import { SemanticFewShotService } from './services/semantic-few-shot.service';
 import { RedisMessageStoreService } from './services/redis-message-store.service';
 
 import { ChatHistoryService } from './services/chat-history.service';
@@ -95,6 +96,13 @@ describe('AgentService', () => {
           useValue: {
             getSkillManifestPrompt: jest.fn().mockReturnValue(''),
             getMatchedSkillBodies: jest.fn().mockReturnValue(''),
+          },
+        },
+        {
+          provide: SemanticFewShotService,
+          useValue: {
+            findMatchedExamples: jest.fn().mockReturnValue([]),
+            buildFewShotMessages: jest.fn().mockReturnValue([]),
           },
         },
         {
