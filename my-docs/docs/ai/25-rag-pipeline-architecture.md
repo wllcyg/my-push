@@ -2,34 +2,6 @@
 
 > 本文档深入解析 AI 知识库系统中最核心的 **RAG 异步知识加工管线（Pipeline）**，涵盖 **数据聚合、智能分块（Chunking）、向量化嵌入（Embedding）、Elasticsearch 向量库落盘与总编排调度** 的完整工业级落地实现。
 
----
-
-## 目录
-- [一、 RAG 知识管线全景架构图](#一-rag-知识管线全景架构图)
-- [二、 核心数据模型契约 (pipeline.types.ts)](#二-核心数据模型契约-pipelinetypests)
-  - [1. 文档聚合快照 (PipelineDocument)](#1-文档聚合快照-pipelinedocument)
-  - [2. 工业级切片模型 (DocumentChunk)](#2-工业级切片模型-documentchunk)
-- [三、 智能分块服务 (ChunkingService)](#三-智能分块服务-chunkingservice)
-  - [1. 为什么要分块？](#1-为什么要分块)
-  - [2. Token 与字符换算机制](#2-token-与字符换算机制)
-  - [3. Markdown 语法感知递归切分](#3-markdown-语法感知递归切分)
-  - [4. 🌟 核心杀手锏：章节标题继承与前缀补全](#4--核心杀手锏章节标题继承与前缀补全)
-  - [5. SHA256 稳定幂等 ID 生成](#5-sha256-稳定幂等-id-生成)
-- [四、 向量化计算服务 (EmbeddingService)](#四-向量化计算服务-embeddingservice)
-  - [1. 多模型提供商适配（DashScope / OpenAI）](#1-多模型提供商适配dashscope--openai)
-  - [2. 批量请求上限保护（Batch Size Clamping）](#2-批量请求上限保护batch-size-clamping)
-- [五、 向量索引存储服务 (VectorIndexService)](#五-向量索引存储服务-vectorindexservice)
-  - [1. 自动初始化 Elasticsearch Mapping (dense_vector)](#1-自动初始化-elasticsearch-mapping-dense_vector)
-  - [2. 幂等清理旧块 (deleteByDocId)](#2-幂等清理旧块-deletebydocid)
-  - [3. 高性能 Bulk 批量管道写入](#3-高性能-bulk-批量管道写入)
-- [六、 知识管线总编排器 (PipelineOrchestrator)](#六-知识管线总编排器-pipelineorchestrator)
-  - [1. 为什么需要总编排器？](#1-为什么需要总编排器)
-  - [2. 双库数据聚合查询 (PostgreSQL + MongoDB)](#2-双库数据聚合查询-postgresql--mongodb)
-  - [3. 单篇 5 步流水线逐行解析](#3-单篇-5-步流水线逐行解析)
-  - [4. ISO-8601 日期安全转换](#4-iso-8601-日期安全转换)
-- [七、 高频架构设计问题与实战 Q&A](#七-高频架构设计问题与实战-qa)
-
----
 
 ## 一、 RAG 知识管线全景架构图
 

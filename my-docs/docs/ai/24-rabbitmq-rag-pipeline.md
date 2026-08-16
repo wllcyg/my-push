@@ -2,26 +2,6 @@
 
 > 本文档面向全栈/后端开发者，全面解析 **消息队列（Message Queue）基础理论**，以及其在 **AI 知识库与 RAG（检索增强生成）系统中的完整落地架构与代码实现**。
 
----
-
-## 目录
-- [一、 为什么 RAG 知识库系统必须使用 MQ？](#一-为什么-rag-知识库系统必须使用-mq)
-- [二、 RabbitMQ 与 AMQP 核心基础概念](#二-rabbitmq-与-amqp-核心基础概念)
-  - [1. 核心角色与模型](#1-核心角色与模型)
-  - [2. 交换机类型（Exchange Types）](#2-交换机类型exchange-types)
-  - [3. Connection 与 Channel 的区别](#3-connection-与-channel-的区别)
-  - [4. 消息可靠性：持久化与 ACK / NACK 机制](#4-消息可靠性持久化与-ack--nack-机制)
-- [三、 本项目 MQ 架构设计与数据流转](#三-本项目-mq-架构设计与数据流转)
-  - [1. 架构总览图](#1-架构总览图)
-  - [2. 文件目录与职责划分](#2-文件目录与职责划分)
-- [四、 核心代码逐行精读](#四-核心代码逐行精读)
-  - [1. 拓扑常量与消息载荷契约](#1-拓扑常量与消息载荷契约)
-  - [2. 底层连接与驱动服务 (RabbitMqService)](#2-底层连接与驱动服务-rabbitmqservice)
-  - [3. 生产者投递 (DocumentPipelinePublisher)](#3-生产者投递-documentpipelinepublisher)
-  - [4. 消费者监听 (DocumentPipelineConsumer)](#4-消费者监听-documentpipelineconsumer)
-- [五、 核心设计考量与高频面试/实战问题](#五-核心设计考量与高频面试实战问题)
-
----
 
 ## 一、 为什么 RAG 知识库系统必须使用 MQ？
 
