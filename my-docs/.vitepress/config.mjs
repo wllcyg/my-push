@@ -12,9 +12,10 @@ export default defineConfig({
     logo: '/logo.png',
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Flutter', link: '/docs/flutter/learning-guide' },
-      { text: 'AI & Agent', link: '/docs/ai/01-agent-learning' },
-      { text: '随笔杂谈', link: '/docs/why/在忘忧AI的第两百一十九天' },
+      { text: 'Flutter', link: '/docs/flutter/00-roadmap/learning-guide' },
+      { text: 'AI & Agent', link: '/docs/ai/01-foundations/01-agent-learning' },
+      { text: 'HarmonyOS', link: '/docs/harmony/app-matrix' },
+      { text: '随笔杂谈', link: '/docs/essays/在忘忧AI的第两百一十九天' },
       { text: 'Tiptap Editor 在线体验', link: 'https://editor.cheatppf.xyz/' }
     ],
     socialLinks: [
@@ -43,8 +44,18 @@ export default defineConfig({
       },
       {
         documentRootPath: '/',
-        scanStartPath: 'docs/why', 
-        resolvePath: '/docs/why/',
+        scanStartPath: 'docs/harmony', 
+        resolvePath: '/docs/harmony/',
+        useTitleFromFileHeading: true,
+        useTitleFromFrontmatter: true,
+        sortMenusOrderByDescending: false,
+        rootGroupText: 'HarmonyOS 鸿蒙专栏',
+        collapsed: false
+      },
+      {
+        documentRootPath: '/',
+        scanStartPath: 'docs/essays', 
+        resolvePath: '/docs/essays/',
         useTitleFromFileHeading: true,
         useTitleFromFrontmatter: true,
         sortMenusOrderByDescending: false,
