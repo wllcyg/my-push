@@ -7,9 +7,10 @@
           <span>Notes</span>
         </a>
         <nav>
-          <a href="/docs/flutter/learning-guide">Flutter</a>
-          <a href="/docs/ai/01-agent-learning">AI & Agent</a>
-          <a href="/docs/why/在忘忧AI的第两百一十九天">随笔杂谈</a>
+          <a href="/docs/flutter/00-roadmap/learning-guide">Flutter</a>
+          <a href="/docs/ai/01-foundations/01-agent-learning">AI & Agent</a>
+          <a href="/docs/harmony/app-matrix">HarmonyOS</a>
+          <a href="/docs/essays/在忘忧AI的第两百一十九天">随笔杂谈</a>
         </nav>
       </header>
 
@@ -18,7 +19,7 @@
           <div class="hero-content">
             <h1>全栈开发与思考笔记</h1>
             <p>一本记录 Flutter 实战、AI & Agent 探索，<br>以及前沿技术深度钻研的开发者笔记。</p>
-            <a href="/docs/ai/01-agent-learning" class="btn">开始阅读</a>
+            <a href="/docs/ai/01-foundations/01-agent-learning" class="btn">开始阅读</a>
           </div>
           <div class="hero-graphics">
             <svg class="graphics-svg" viewBox="0 0 400 300">
@@ -69,7 +70,7 @@
         </section>
 
         <section class="cards">
-          <a href="/docs/flutter/learning-guide" class="card">
+          <a href="/docs/flutter/00-roadmap/learning-guide" class="card">
             <div class="card-icon">
               <svg viewBox="0 0 24 24" class="fill-only">
                 <path d="M14.314 0L2.3 12 6 15.7 21.684 0h-7.37z" opacity="0.9"/>
@@ -85,21 +86,36 @@
               <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </div>
           </a>
-          <a href="/docs/ai/01-agent-learning" class="card">
+          <a href="/docs/ai/01-foundations/01-agent-learning" class="card">
             <div class="card-icon">
               <svg viewBox="0 0 24 24" class="stroke-only" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
               </svg>
             </div>
             <div class="card-content">
-              <h2>AI & Agent 探砸</h2>
+              <h2>AI & Agent 探索</h2>
               <p>涵盖大语言模型、智能体框架应用，以及 RAG 检索增强等核心前沿技术沉淀。</p>
             </div>
             <div class="card-arrow">
               <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
             </div>
           </a>
-          <a href="/docs/why/在忘忧AI的第两百一十九天" class="card">
+          <a href="/docs/harmony/app-matrix" class="card">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24" class="stroke-only" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"></circle>
+                <circle cx="12" cy="12" r="4"></circle>
+              </svg>
+            </div>
+            <div class="card-content">
+              <h2>HarmonyOS 鸿蒙</h2>
+              <p>鸿蒙纯血原生应用矩阵、工具套件设计方案与产品规划。</p>
+            </div>
+            <div class="card-arrow">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+            </div>
+          </a>
+          <a href="/docs/essays/在忘忧AI的第两百一十九天" class="card">
             <div class="card-icon">
               <svg viewBox="0 0 24 24" class="stroke-only" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -107,7 +123,7 @@
             </div>
             <div class="card-content">
               <h2>随笔杂谈</h2>
-              <p>工作之余的一些磞磞念念，关于 AI、职业与生活的随手记录。</p>
+              <p>工作之余的一些碎碎念念，关于 AI、职业与生活的随手记录。</p>
             </div>
             <div class="card-arrow">
               <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
