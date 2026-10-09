@@ -12,6 +12,7 @@ export default defineConfig({
     logo: '/logo.png',
     nav: [
       { text: 'Home', link: '/' },
+      { text: 'Python', link: '/docs/python/01_Python简介与环境配置' },
       { text: 'Flutter', link: '/docs/flutter/00-roadmap/learning-guide' },
       { text: 'AI & Agent', link: '/docs/ai/01-foundations/01-agent-learning' },
       { text: 'HarmonyOS', link: '/docs/harmony/app-matrix' },
@@ -22,6 +23,16 @@ export default defineConfig({
       { icon: 'github', link: 'https://github.com/wllcyg' }
     ],
     sidebar: generateSidebar([
+      {
+        documentRootPath: '/',        
+        scanStartPath: 'docs/python',     
+        resolvePath: '/docs/python/',     
+        useTitleFromFileHeading: true,
+        useTitleFromFrontmatter: true,
+        sortMenusOrderByDescending: false,
+        rootGroupText: 'Python 开发指南',
+        collapsed: false
+      },
       {
         documentRootPath: '/',        
         scanStartPath: 'docs/ai',     

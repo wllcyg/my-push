@@ -7,6 +7,7 @@
           <span>Notes</span>
         </a>
         <nav>
+          <a href="/docs/python/01_Python简介与环境配置">Python</a>
           <a href="/docs/flutter/00-roadmap/learning-guide">Flutter</a>
           <a href="/docs/ai/01-foundations/01-agent-learning">AI & Agent</a>
           <a href="/docs/harmony/app-matrix">HarmonyOS</a>
@@ -70,6 +71,23 @@
         </section>
 
         <section class="cards">
+          <a href="/docs/python/01_Python简介与环境配置" class="card">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24" class="stroke-only" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2C8 2 7 3.5 7 5v2h5v1H5c-2 0-3 1.5-3 5s1 5 3 5h2v-2c0-1.5 1-2.5 2.5-2.5h5c1.5 0 2.5-1 2.5-2.5V5c0-1.5-1-3-5-3h0z"></path>
+                <path d="M12 22c4 0 5-1.5 5-3v-2h-5v-1h7c2 0 3-1.5 3-5s-1-5-3-5h-2v2c0 1.5-1 2.5-2.5 2.5h-5c-1.5 0-2.5 1-2.5 2.5V19c0 1.5 1 3 5 3h0z"></path>
+                <circle cx="9" cy="4.5" r="0.8" fill="currentColor"></circle>
+                <circle cx="15" cy="19.5" r="0.8" fill="currentColor"></circle>
+              </svg>
+            </div>
+            <div class="card-content">
+              <h2>Python 开发指南</h2>
+              <p>涵盖现代 Python 语法规范、异步编程、工程化管理与后端实战技术沉淀。</p>
+            </div>
+            <div class="card-arrow">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
           <a href="/docs/flutter/00-roadmap/learning-guide" class="card">
             <div class="card-icon">
               <svg viewBox="0 0 24 24" class="fill-only">
